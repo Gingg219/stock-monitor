@@ -12,7 +12,7 @@
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: 'http://stock-monitor.test',   // trỏ về backend
+  baseURL: 'http://127.0.0.1:8000',   // trỏ về backend
   withCredentials: true                   // BẮT BUỘC để cookie đi kèm
 })
 

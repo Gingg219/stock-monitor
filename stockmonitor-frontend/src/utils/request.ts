@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://stock-monitor.test/', // Laravel backend URL
+  baseURL: 'http://127.0.0.1:8000/', // Laravel backend URL
   withCredentials: true,            // quan trọng để gửi cookie
 })
 
