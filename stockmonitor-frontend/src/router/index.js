@@ -21,6 +21,39 @@ const routes = [
             /* webpackChunkName: "dashboard" */ '@/views/dashboard/Dashboard.vue'
           ),
       },
+
+      // ===== OPERATION =====
+      {
+        path: '/inbounds/create',
+        name: 'Inbound create',
+        component: () => import('@/views/inbound/IncomeCreate.vue'),
+      },
+      { path: '/map', name: 'Map', component: () => import('@/components/warehouse-map/WarehouseMap.vue') },
+
+      // Inbound (list + detail with tabs)
+      { path: '/inbounds', name: 'Inbound List', component: () => import('@/views/inbound/InboundList.vue') },
+      {
+        path: '/inbounds/:id',
+        name: 'Inbound Detail',
+        component: () => import('@/views/inbound/InboundDetail.vue'),
+        props: true,
+        children: [
+          { path: '', redirect: { name: 'Inbound Lines' } },
+          { path: 'lines',   name: 'Inbound Lines',   component: () => import('@/views/inbound/tabs/InboundLinesTab.vue') },
+          { path: 'qr',      name: 'Inbound QR',      component: () => import('@/views/inbound/tabs/InboundQrTab.vue') },
+          { path: 'history', name: 'Inbound History', component: () => import('@/views/inbound/tabs/InboundHistoryTab.vue') },
+        ],
+      },
+
+      { path: '/putaway',  name: 'Put away', component: () => import('@/views/putaway/Putaway.vue') },
+      { path: '/transfer', name: 'Transfer', component: () => import('@/views/transfer/TransferK1K2.vue') },
+
+      // ===== ADMIN =====
+      { path: '/admin/layouts', name: 'Layouts', component: () => import('@/views/config_layouts/ConfigLayout.vue') },
+
+
+
+
       {
         path: '/theme',
         name: 'Theme',

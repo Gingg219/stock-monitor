@@ -1,8 +1,11 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/', // Laravel backend URL
-  withCredentials: true,            // quan trọng để gửi cookie
+export const api = axios.create({
+  baseURL: 'http://localhost:8000',
+  withXSRFToken: true,
+  withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 })
 
 export default api

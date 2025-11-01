@@ -23,6 +23,10 @@ import {
   cibCcPaypal,
   cibCcApplePay,
   cibCcAmex,
+  cilTransfer,
+  cilQrCode,
+  cilStorage,
+  cilArrowCircleBottom
 } from '@coreui/icons'
 import { cifUs, cifBr, cifIn, cifFr, cifEs, cifPl } from '@coreui/icons'
 import {
@@ -173,5 +177,9 @@ export const iconsSet = Object.assign(
     cibCcPaypal,
     cibCcApplePay,
     cibCcAmex,
+    cilTransfer,
+    cilQrCode,
+    cilStorage,
+    cilArrowCircleBottom
   },
 )
