@@ -12,9 +12,22 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withProviders([
+        App\Providers\RepositoryServiceProvider::class,
+        App\Providers\AppServiceProvider::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            EnsureFrontendRequestsAreStateful::class,
+        // 1. Middleware toàn cục (áp dụng cho tất cả request)
+        $middleware->append(\App\Http\Middleware\EnforceAjaxHeader::class);
+
+        // 2. Middleware nhóm API
+        $middleware->group('api', [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+
+        // 3. Middleware đặt tên (route middleware)
+        $middleware->alias([
+            'role'        => \App\Http\Middleware\EnsureRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\ServiceProvider;
+
 return [
 
     /*
@@ -123,4 +125,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'providers' => ServiceProvider::defaultProviders()
+        ->merge([
+            // Package / custom providers thêm vào
+            Prettus\Repository\Providers\RepositoryServiceProvider::class,
+        ])
+        ->toArray(),
 ];

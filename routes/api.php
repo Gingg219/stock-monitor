@@ -19,3 +19,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn(Request $r) => $r->user());
 
 });
+
+Route::middleware('api')->group(function () {
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        //Admin
+
+        Route::group(['prefix' => 'admin'], function () {
+            // Route::get('/locations', [Route::get('/locations', [LocationController::class, 'index'])
+            // ->middleware('role:admin|warehouse.supervisor|warehouse.operator|viewer');::class, 'index'])
+            // ->middleware('role:admin|warehouse.supervisor|warehouse.operator|viewer');
+        });
+
+        //User
+        Route::group(['prefix' => 'user'], function () {
+            //...
+        });
+    });
+});

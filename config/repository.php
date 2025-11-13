@@ -227,20 +227,19 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    'generator'  => [
-        'basePath'      => app()->path(),
-        'rootNamespace' => 'App\\',
-        'stubsOverridePath' => app()->path(),
-        'paths'         => [
-            'models'       => 'Entities',
-            'repositories' => 'Repositories',
-            'interfaces'   => 'Repositories',
-            'transformers' => 'Transformers',
-            'presenters'   => 'Presenters',
+    'generator'=>[
+        'basePath'=>app()->path(),
+        'rootNamespace'=>'App\\',
+        'paths'=>[
+            'models'=>'Models',
+            'repositories'=>'Repositories\\Eloquent',
+            'interfaces'=>'Contracts\\Repositories',
+            'transformers'=>'Transformers',
+            'presenters'=>'Presenters',
             'validators'   => 'Validators',
             'controllers'  => 'Http/Controllers',
             'provider'     => 'RepositoryServiceProvider',
-            'criteria'     => 'Criteria'
+            'criteria'     => 'Criteria',
         ]
     ]
 ];
