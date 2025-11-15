@@ -1,37 +1,79 @@
-<!-- src/views/LayoutsView.vue -->
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { getLayouts } from '@/api/layouts'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import {
   CCard, CCardBody, CCardHeader, CButton, CContainer, CForm, CFormInput,
   CButtonGroup, CFormCheck, CTable, CTableHead, CTableBody, CTableRow, CTableHeaderCell, CTableDataCell,
   CPagination, CPaginationItem, CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
-  CRow, CFormLabel, CBadge
+  CRow, CFormLabel
 } from '@coreui/vue'
 import CIcon from '@coreui/icons-vue'
 import { cilPencil, cilDelete, cilPlaylistAdd } from '@coreui/icons'
 
-/* ------------------ Mock data ------------------ */
-const rows = ref([
-  { id: 1,  wh: 'K1', rack: 'A', tier: 1, slot: '1.1', pack: 'Pallet', part: 'VE4-4150-470' },
-  { id: 2,  wh: 'K1', rack: 'A', tier: 2, slot: '2.1', pack: 'Box',    part: 'VE4-4150-472' },
-  { id: 3,  wh: 'K1', rack: 'B', tier: 1, slot: '1.1', pack: 'Pallet', part: 'VE4-4150-473' },
-  { id: 4,  wh: 'K1', rack: 'C', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-474' },
-  { id: 5,  wh: 'K1', rack: 'D', tier: 1, slot: '1.1', pack: 'Pallet', part: 'VE4-4150-475' },
-  { id: 6,  wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 7,  wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 8,  wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 9,  wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 10, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 11, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 12, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 13, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 14, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 15, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-  { id: 16, wh: 'K1', rack: 'E', tier: 1, slot: '1.1', pack: 'Box',    part: 'VE4-4150-470' },
-])
-let nextId = 17
-
 /* ------------------ State ------------------ */
+
+// danh sách record hiển thị trong bảng (đã flatten)
+const rows = ref([])
+
+// nếu muốn giữ lại raw layouts để dùng chỗ khác
+const layouts = ref([])
+
+let nextId = 1
+const loading = ref(false)
+const error = ref('')
+
+/**
+ * Flatten dữ liệu từ API:
+ * warehouses[] -> racks[] -> tiers[] -> slots[]
+ * thành dạng:
+ * { id, wh, rack, tier, slot, pack, part }
+ */
+function flattenLayouts(data) {
+  const result = []
+  let idCounter = 1
+
+  data?.forEach(wh => {
+    wh.racks?.forEach(rack => {
+      rack.tiers?.forEach(tier => {
+        tier.slots?.forEach(slot => {
+          result.push({
+            id: idCounter++,
+            wh: wh.code,                 // K1 / K2
+            rack: rack.code,             // A / B / ...
+            tier: tier.level_no,         // số tầng
+            slot: slot.code,             // A-1 / A-2 ...
+            pack: slot.allowed_unit || '', // 'box' / 'pallet' ...
+            // nếu backend có field khác thì đổi lại ở đây
+            part: slot.part_code || '',  // tạm thời để trống nếu chưa có
+          })
+        })
+      })
+    })
+  })
+
+  return result
+}
+
+// load dữ liệu khi component mount
+onMounted(async () => {
+  try {
+    loading.value = true
+    const res = await getLayouts()       // axios response
+    const data = res?.data ?? []         // layouts thực tế
+
+    console.log('Get layouts thành công:', data)
+    layouts.value = data
+    rows.value = flattenLayouts(data)
+    nextId = rows.value.length + 1
+  } catch (err) {
+    console.error(err)
+    error.value = 'Get layouts thất bại'
+  } finally {
+    loading.value = false
+  }
+})
+
+/* ------------------ State cho UI ------------------ */
 const activeWH = ref('K1')
 const q = ref('')
 const qEff = ref('')
@@ -64,11 +106,11 @@ const filtered = computed(() => {
   )
 })
 
-/* Phân trang an toàn */
 const pageCount = computed(() => {
   const total = Math.ceil(filtered.value.length / perPage.value) || 1
   return total
 })
+
 function setPage(p) {
   const n = pageCount.value
   if (Number.isNaN(p)) p = 1

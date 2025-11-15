@@ -66,7 +66,7 @@ async function saveIncome() {
   }
 
   // Tạo inbound (sau này thay bằng API create)
-  const id = await store.create(payload)
+  const id = await store.canGenerateQR(payload)
   createdId.value = id
   saved.value = true
   alert(`Đã lưu chứng từ: ${form.income_no}\nTổng số lượng: ${total}`)
@@ -74,6 +74,9 @@ async function saveIncome() {
 }
 
 function goToQR() {
+  console.log(1111);
+  console.log(createdId.value);
+  
   if (!createdId.value) return
   router.push({ name: 'Inbound QR', params: { id: String(createdId.value) } })
 }

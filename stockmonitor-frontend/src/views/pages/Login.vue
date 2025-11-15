@@ -11,7 +11,7 @@ const handleLogin = async () => {
     await login(email.value, password.value)
     const user = await me()
     console.log('Đăng nhập thành công:', user.data)
-    window.location.href = '/' // chuyển về dashboard
+    window.location.href = '/'
   } catch (err) {
     error.value = 'Đăng nhập thất bại'
   }

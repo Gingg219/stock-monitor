@@ -12,9 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Gate::define('is-admin', fn($user) => $user->role === 'admin');
-        Gate::define('is-supervisor', fn($user) => in_array($user->role, ['admin','warehouse.supervisor']));
-        Gate::define('is-operator', fn($user) => in_array($user->role, ['admin','warehouse.supervisor','warehouse.operator']));
+        //
     }
 
     /**
