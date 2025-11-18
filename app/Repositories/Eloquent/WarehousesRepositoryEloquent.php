@@ -38,7 +38,7 @@ class WarehousesRepositoryEloquent extends BaseRepository implements WarehousesR
     public function getWarehouseTree($filters = [])
     {
         $query = $this->model->with([
-            'racks.tiers.slots'
+            'racks.tiers.slots.fixed_locations.parts'
         ]);
 
         if (!empty($filters['warehouse_id'])) {

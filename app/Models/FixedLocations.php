@@ -7,11 +7,11 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class Slots.
+ * Class FixedLocations.
  *
  * @package namespace App\Models;
  */
-class Slots extends Model implements Transformable
+class FixedLocations extends Model implements Transformable
 {
     use TransformableTrait;
 
@@ -21,15 +21,15 @@ class Slots extends Model implements Transformable
      * @var array
      */
     protected $fillable = [
-        'tier_id',
-        'code',
-        'allowed_unit',
-        'is_active',
+        'warehouse_id',
+        'part_id',
+        'slot_id',
+        'min_qty',
+        'max_qty',
     ];
 
-    public function fixed_locations()
+    public function parts()
     {
-        return $this->hasMany(FixedLocations::class, 'slot_id');
+        return $this->belongsTo(Parts::class, 'part_id');
     }
-
 }

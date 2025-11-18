@@ -42,4 +42,9 @@ class Warehouses extends Model implements Transformable
     {
         return $this->hasMany(Racks::class, 'warehouse_id');
     }
+
+    public function fixed_locations()
+    {
+        return $this->hasMany(FixedLocations::class, 'warehouse_id');
+    }
 }

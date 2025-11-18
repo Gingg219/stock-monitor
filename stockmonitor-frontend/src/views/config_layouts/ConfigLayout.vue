@@ -36,21 +36,52 @@ function flattenLayouts(data) {
     wh.racks?.forEach(rack => {
       rack.tiers?.forEach(tier => {
         tier.slots?.forEach(slot => {
-          result.push({
-            id: idCounter++,
-            wh: wh.code,                 // K1 / K2
-            rack: rack.code,             // A / B / ...
-            tier: tier.level_no,         // số tầng
-            slot: slot.code,             // A-1 / A-2 ...
-            pack: slot.allowed_unit || '', // 'box' / 'pallet' ...
-            // nếu backend có field khác thì đổi lại ở đây
-            part: slot.part_code || '',  // tạm thời để trống nếu chưa có
-          })
+          // slot.fixed_locations?.forEach(fixed_location => {
+          //   console.log(idCounter++);
+            
+          //   const part = fixed_location.parts; // Lấy đối tượng part
+          //   result.push({
+          //     id: idCounter++,
+          //     wh: wh.code,                 // K1 / K2
+          //     rack: rack.code,             // A / B / ...
+          //     tier: tier.level_no,         // số tầng
+          //     slot: slot.code,             // A-1 / A-2 ...
+          //     pack: slot.allowed_unit || '', // 'box' / 'pallet' ...
+          //     part: part?.part_no || '',  // Lấy part_no từ object
+          //   });
+          // })
+
+          // Kiểm tra xem có fixed_locations hay không
+          if (slot.fixed_locations && slot.fixed_locations.length > 0) {
+            // Nếu có: Lặp qua từng fixed_location như mã cũ
+            slot.fixed_locations.forEach(fixed_location => {
+              const part = fixed_location.parts;
+              result.push({
+                id: idCounter++,
+                wh: wh.code,
+                rack: rack.code,
+                tier: tier.level_no,
+                slot: slot.code,
+                pack: slot.allowed_unit || '',
+                part: part?.part_no || '',
+              });
+            });
+          } else {
+            // Nếu KHÔNG CÓ fixed_locations: Vẫn push slot đó vào kết quả với giá trị rỗng
+            result.push({
+              id: idCounter++,
+              wh: wh.code,
+              rack: rack.code,
+              tier: tier.level_no,
+              slot: slot.code,
+              pack: slot.allowed_unit || '',
+              part: '', // Không có part
+            });
+          }
         })
       })
     })
   })
-
   return result
 }
 
@@ -61,13 +92,13 @@ onMounted(async () => {
     const res = await getLayouts()       // axios response
     const data = res?.data ?? []         // layouts thực tế
 
-    console.log('Get layouts thành công:', data)
+    console.log('Get layouts success:', data)
     layouts.value = data
     rows.value = flattenLayouts(data)
     nextId = rows.value.length + 1
   } catch (err) {
     console.error(err)
-    error.value = 'Get layouts thất bại'
+    error.value = 'Get layouts fail'
   } finally {
     loading.value = false
   }
