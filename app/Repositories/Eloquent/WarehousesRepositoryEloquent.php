@@ -35,7 +35,7 @@ class WarehousesRepositoryEloquent extends BaseRepository implements WarehousesR
         $this->pushCriteria(app(RequestCriteria::class));
     }
 
-    public function getWarehouseTree($filters = [])
+    public function index($filters = [])
     {
         $query = $this->model->with([
             'racks.tiers.slots.fixed_locations.parts'
@@ -48,5 +48,46 @@ class WarehousesRepositoryEloquent extends BaseRepository implements WarehousesR
         // dd($query->toSql());
 
         return $query->get();
+    }
+
+    public function store($request) {
+        // $slot = $this->where(['name' => $request['name'], '' => $request['book_cd']])->first();
+
+        // if (!empty($slot)) {
+        //     $slot->update([
+        //         //...
+        //     ]);
+        // } else {
+        //     $uploadFile = $this->upload($request['image'], 'slots');
+        //     $request['image'] = $uploadFile;
+        //     $slot = $this->create($request);
+        // }
+        // $slot->users()->attach([$request['user_id'] => ['quantity' => $request['quantity']]]);
+        // $slot->categories()->sync($request['categories']);
+        // return $slot;
+        return $request;
+
+    }
+
+    public function update($request, $id) {
+        // $slot = $this->where(['name' => $request['name'], 'book_cd' => $request['book_cd']])->first();
+
+        // if (!empty($slot)) {
+        //     $slot->update([
+        //         //...
+        //     ]);
+        // } else {
+        //     $uploadFile = $this->upload($request['image'], 'slots');
+        //     $request['image'] = $uploadFile;
+        //     $slot = $this->create($request);
+        // }
+        // $slot->users()->attach([$request['user_id'] => ['quantity' => $request['quantity']]]);
+        // $slot->categories()->sync($request['categories']);
+        // return $slot;
+    }
+
+    public function destroy($id) {
+        if (count($this->firstById($id, 'slots')->slots) != 0) return NULL;
+        return $this->delete($id);
     }
 }

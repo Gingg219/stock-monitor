@@ -11,5 +11,11 @@ use Prettus\Repository\Contracts\RepositoryInterface;
  */
 interface WarehousesRepository extends RepositoryInterface
 {
-    public function getWarehouseTree($filters = []);
+    public function index($filters = []);
+
+    public function store($request);
+
+    public function update($request, $id);
+
+    public function destroy($id);
 }
