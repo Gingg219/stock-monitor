@@ -15,7 +15,7 @@ interface WarehousesRepository extends RepositoryInterface
 
     public function store($request);
 
-    public function update($request, $id);
+    public function updateWithRelations($id, array $data);
 
     public function destroy($id);
 }

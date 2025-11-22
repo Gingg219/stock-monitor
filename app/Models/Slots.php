@@ -32,4 +32,23 @@ class Slots extends Model implements Transformable
         return $this->hasMany(FixedLocations::class, 'slot_id');
     }
 
+    public function storage_units()
+    {
+        return $this->hasMany(StorageUnits::class, 'current_slot_id');
+    }
+
+    public function stock_ledger()
+    {
+        return $this->hasMany(StockLedger::class, 'slot_id');
+    }
+
+    public function movement_lines1()
+    {
+        return $this->hasMany(MovementLines::class, 'from_slot_id');
+    }
+
+    public function movement_lines2()
+    {
+        return $this->hasMany(MovementLines::class, 'to_slot_id');
+    }
 }

@@ -47,4 +47,24 @@ class Warehouses extends Model implements Transformable
     {
         return $this->hasMany(FixedLocations::class, 'warehouse_id');
     }
+
+    public function movements1()
+    {
+        return $this->hasMany(Movements::class, 'from_warehouse_id');
+    }
+
+    public function movements2()
+    {
+        return $this->hasMany(Movements::class, 'to_warehouse_id');
+    }
+
+    public function stock_ledger()
+    {
+        return $this->hasMany(StockLedger::class, 'warehouse_id');
+    }
+
+    public function storage_units()
+    {
+        return $this->hasMany(StorageUnits::class, 'warehouse_id');
+    }
 }

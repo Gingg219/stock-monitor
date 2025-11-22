@@ -20,6 +20,13 @@ class StockLedger extends Model implements Transformable
      *
      * @var array
      */
-    protected $fillable = [];
+    protected $fillable = [
+        'occurred_at',
+        'warehouse_id',
+        'slot_id',
+        'part_id',
+        'qty_change',
+        'movement_line_id'
+    ];
 
 }

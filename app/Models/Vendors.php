@@ -7,11 +7,11 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class IncomeLines.
+ * Class Vendors.
  *
  * @package namespace App\Models;
  */
-class IncomeLines extends Model implements Transformable
+class Vendors extends Model implements Transformable
 {
     use TransformableTrait;
 
@@ -21,18 +21,17 @@ class IncomeLines extends Model implements Transformable
      * @var array
      */
     protected $fillable = [
-        'income_id',
-        'part_id',
-        'vendor_id',
-        'lot_no',
-        'expiry_date',
-        'qty_total',
-        'snp_overwrite',
-        'remark',
+        'code',
+        'name'
     ];
-    public function storage_units()
+
+    public function parts()
     {
-        return $this->hasMany(StorageUnits::class, 'income_line_id');
+        return $this->hasMany(Parts::class, 'vendor_id');
     }
 
+    public function income_lines()
+    {
+        return $this->hasMany(IncomeLines::class, 'vendor_id');
+    }
 }

@@ -28,7 +28,10 @@ Route::middleware('api')->group(function () {
         //Admin
         Route::group(['prefix' => 'admin'], function () {
             Route::get('/locations', [LocationController::class, 'index'])
-            ->middleware('role:admin|user');
+            ->middleware('role:admin');
+
+            Route::put('/locations/{id}', [LocationController::class, 'update'])
+            ->middleware('role:admin');
         });
         
         //User

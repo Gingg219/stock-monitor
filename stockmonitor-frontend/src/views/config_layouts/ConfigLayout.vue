@@ -1,5 +1,4 @@
 <script setup>
-import { getLayouts } from '@/api/layouts'
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import {
   CCard, CCardBody, CCardHeader, CButton, CContainer, CForm, CFormInput,
@@ -10,12 +9,14 @@ import {
 import CIcon from '@coreui/icons-vue'
 import { cilPencil, cilDelete, cilPlaylistAdd } from '@coreui/icons'
 
-/* ------------------ State ------------------ */
+// API gọi về backend
+import { getLayouts, createLayout, updateLayout, deleteLayout } from '@/api/layouts'
+
+/* ------------------ State chính ------------------ */
 
 // danh sách record hiển thị trong bảng (đã flatten)
 const rows = ref([])
-
-// nếu muốn giữ lại raw layouts để dùng chỗ khác
+// raw data từ API (nếu sau này cần dùng)
 const layouts = ref([])
 
 let nextId = 1
@@ -24,9 +25,9 @@ const error = ref('')
 
 /**
  * Flatten dữ liệu từ API:
- * warehouses[] -> racks[] -> tiers[] -> slots[]
+ * warehouses[] -> racks[] -> tiers[] -> slots[] -> fixed_locations[]
  * thành dạng:
- * { id, wh, rack, tier, slot, pack, part }
+ * { id, wh, rack, tier, slot, pack, part, backend_id }
  */
 function flattenLayouts(data) {
   const result = []
@@ -36,47 +37,33 @@ function flattenLayouts(data) {
     wh.racks?.forEach(rack => {
       rack.tiers?.forEach(tier => {
         tier.slots?.forEach(slot => {
-          // slot.fixed_locations?.forEach(fixed_location => {
-          //   console.log(idCounter++);
-            
-          //   const part = fixed_location.parts; // Lấy đối tượng part
-          //   result.push({
-          //     id: idCounter++,
-          //     wh: wh.code,                 // K1 / K2
-          //     rack: rack.code,             // A / B / ...
-          //     tier: tier.level_no,         // số tầng
-          //     slot: slot.code,             // A-1 / A-2 ...
-          //     pack: slot.allowed_unit || '', // 'box' / 'pallet' ...
-          //     part: part?.part_no || '',  // Lấy part_no từ object
-          //   });
-          // })
-
-          // Kiểm tra xem có fixed_locations hay không
+          // nếu có fixed_locations: mỗi fixed_location tương ứng 1 dòng
           if (slot.fixed_locations && slot.fixed_locations.length > 0) {
-            // Nếu có: Lặp qua từng fixed_location như mã cũ
-            slot.fixed_locations.forEach(fixed_location => {
-              const part = fixed_location.parts;
+            slot.fixed_locations.forEach(fx => {
+              const part = fx.parts
               result.push({
                 id: idCounter++,
-                wh: wh.code,
-                rack: rack.code,
-                tier: tier.level_no,
-                slot: slot.code,
-                pack: slot.allowed_unit || '',
-                part: part?.part_no || '',
-              });
-            });
+                backend_id: fx.id ?? null,      // id fixed_location trong DB
+                wh: wh.code,                    // kho
+                rack: rack.code,                // dãy
+                tier: tier.level_no,            // tầng
+                slot: slot.code,                // vị trí
+                pack: slot.allowed_unit || '',  // Pallet/Box...
+                part: part?.part_no || '',      // mã linh kiện
+              })
+            })
           } else {
-            // Nếu KHÔNG CÓ fixed_locations: Vẫn push slot đó vào kết quả với giá trị rỗng
+            // không có fixed_locations: vẫn hiển thị dòng trống part
             result.push({
               id: idCounter++,
+              backend_id: null,
               wh: wh.code,
               rack: rack.code,
               tier: tier.level_no,
               slot: slot.code,
               pack: slot.allowed_unit || '',
-              part: '', // Không có part
-            });
+              part: '',
+            })
           }
         })
       })
@@ -89,10 +76,9 @@ function flattenLayouts(data) {
 onMounted(async () => {
   try {
     loading.value = true
-    const res = await getLayouts()       // axios response
-    const data = res?.data ?? []         // layouts thực tế
+    const res = await getLayouts()
+    const data = res?.data ?? []
 
-    console.log('Get layouts success:', data)
     layouts.value = data
     rows.value = flattenLayouts(data)
     nextId = rows.value.length + 1
@@ -105,30 +91,48 @@ onMounted(async () => {
 })
 
 /* ------------------ State cho UI ------------------ */
-const activeWH = ref('K1')
-const q = ref('')
-const qEff = ref('')
+
+const activeWH = ref('K1')       // kho đang chọn
+const q = ref('')               // ô search thô
+const qEff = ref('')            // search đã debounce/lowercase
+
 const currentPage = ref(1)
 const perPage = ref(10)
 
 const showForm = ref(false)
 const showConfirm = ref(false)
-const editingId = ref(null)
+
+const editingId = ref(null)         // id dòng hiển thị
+const editingBackendId = ref(null)  // id record trong DB
+
 const toDeleteId = ref(null)
-const form = reactive({ wh: 'K1', rack: '', tier: 1, slot: '', pack: '', part: '' })
+const toDeleteBackendId = ref(null)
+
+const form = reactive({
+  wh: 'K1',
+  rack: '',
+  tier: 1,
+  slot: '',
+  pack: '',
+  part: '',
+})
 
 /* ------------------ Reactions ------------------ */
+
 // đổi kho -> quay về trang 1
 watch(activeWH, () => { currentPage.value = 1 })
 
 // debounce search
-let t = null
+let debounceTimer = null
 watch(q, v => {
-  clearTimeout(t)
-  t = setTimeout(() => { qEff.value = (v || '').trim().toLowerCase() }, 250)
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    qEff.value = (v || '').trim().toLowerCase()
+  }, 250)
 })
 
-/* ------------------ Derived data ------------------ */
+/* ------------------ Derived data (filter, paging) ------------------ */
+
 const filtered = computed(() => {
   const query = qEff.value
   return rows.value.filter(r =>
@@ -147,6 +151,8 @@ function setPage(p) {
   if (Number.isNaN(p)) p = 1
   currentPage.value = Math.min(Math.max(1, p), n)
 }
+
+// khi filtered/perPage đổi, giữ currentPage trong khoảng hợp lệ
 watch([filtered, perPage], () => setPage(currentPage.value))
 
 const paged = computed(() => {
@@ -154,34 +160,106 @@ const paged = computed(() => {
   return filtered.value.slice(start, start + perPage.value)
 })
 
-/* ------------------ Actions ------------------ */
+/* ------------------ Actions: Create / Edit / Delete ------------------ */
+
 function openCreate() {
   editingId.value = null
-  Object.assign(form, { wh: activeWH.value, rack: '', tier: 1, slot: '', pack: '', part: '' })
+  editingBackendId.value = null
+
+  Object.assign(form, {
+    wh: activeWH.value,
+    rack: '',
+    tier: 1,
+    slot: '',
+    pack: '',
+    part: '',
+  })
+
   showForm.value = true
 }
+
 function openEdit(row) {
   editingId.value = row.id
-  Object.assign(form, { ...row })
+  editingBackendId.value = row.backend_id ?? null
+
+  Object.assign(form, {
+    wh: row.wh,
+    rack: row.rack,
+    tier: row.tier,
+    slot: row.slot,
+    pack: row.pack,
+    part: row.part,
+  })
+
   showForm.value = true
 }
-function saveForm() {
-  if (!form.rack || !form.slot || !form.part) return
-  if (editingId.value) {
-    const idx = rows.value.findIndex(r => r.id === editingId.value)
-    if (idx >= 0) rows.value[idx] = { id: editingId.value, ...form }
-  } else {
-    rows.value.unshift({ id: nextId++, ...form })
+
+async function saveForm() {
+  if (!form.rack || !form.slot) {
+    alert('Vui lòng nhập đầy đủ Dãy & Vị trí')
+    return
   }
-  showForm.value = false
+
+  const payload = {
+    wh: form.wh,
+    rack: form.rack,
+    tier: form.tier,
+    slot: form.slot,
+    pack: form.pack,
+    part: form.part,
+  }
+
+  try {
+    // UPDATE: đã có record fixed_location trong DB
+    if (editingBackendId.value) {
+      await updateLayout(editingBackendId.value, payload)
+
+      const idx = rows.value.findIndex(r => r.id === editingId.value)
+      if (idx >= 0) {
+        rows.value[idx] = {
+          id: editingId.value,
+          backend_id: editingBackendId.value,
+          ...payload,
+        }
+      }
+    }
+    // CREATE: tạo fixed_location mới
+    else {
+      const res = await createLayout(payload)
+      const newBackendId = res.data?.id ?? null
+
+      rows.value.unshift({
+        id: nextId++,
+        backend_id: newBackendId,
+        ...payload,
+      })
+    }
+
+    showForm.value = false
+  } catch (err) {
+    console.error(err)
+    alert('Lưu thất bại!')
+  }
 }
+
 function askDelete(row) {
   toDeleteId.value = row.id
+  toDeleteBackendId.value = row.backend_id ?? null
   showConfirm.value = true
 }
-function doDelete() {
-  if (toDeleteId.value != null) rows.value = rows.value.filter(r => r.id !== toDeleteId.value)
-  showConfirm.value = false
+
+async function doDelete() {
+  try {
+    if (toDeleteBackendId.value) {
+      await deleteLayout(toDeleteBackendId.value)
+    }
+    rows.value = rows.value.filter(r => r.id !== toDeleteId.value)
+  } catch (err) {
+    console.error(err)
+    alert('Xoá thất bại!')
+  } finally {
+    showConfirm.value = false
+  }
 }
 </script>
 

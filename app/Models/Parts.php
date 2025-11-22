@@ -34,4 +34,28 @@ class Parts extends Model implements Transformable
         'updated_at',
     ];
 
+    public function stock_ledger()
+    {
+        return $this->hasMany(StockLedger::class, 'part_id');
+    }
+
+    public function storage_units()
+    {
+        return $this->hasMany(StorageUnits::class, 'part_id');
+    }
+
+    public function fixed_locations()
+    {
+        return $this->hasMany(FixedLocations::class, 'part_id');
+    }
+
+    public function income_lines()
+    {
+        return $this->hasMany(IncomeLines::class, 'part_id');
+    }
+
+    public function movement_lines()
+    {
+        return $this->hasMany(MovementLines::class, 'part_id');
+    }
 }

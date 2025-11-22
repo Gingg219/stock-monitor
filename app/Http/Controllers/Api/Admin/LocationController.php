@@ -36,14 +36,25 @@ class LocationController extends Controller
         } else {
             // return response()->json(['status' => '200', 'message' => 'Thêm mới thành công!']);
         }
-        
-        return response()->json(['status' => '200', 'message' => 'Thêm mới thành công!']);
+        $data = $request->toArray();
+
+        return response()->json([
+            'status' => '200',
+            'message' => 'Thêm mới thành công!',
+            'data' => $data // Thêm dữ liệu vào phản hồi
+        ], 200);
     }
 
     public function update($request,$id)
     {
-        $warehouses = $this->warehouseRepo->update($request, $id);
-        return response()->json($warehouses);
+        $slots = $this->warehouseRepo->store($request, $id);
+        if (!$slots) return response()->json(['status' => '400', 'message' => 'Thêm mới thất bại!']);
+
+        return response()->json([
+            'status' => '200',
+            'message' => 'Thêm mới thành công!',
+            'data' => $slots // Thêm dữ liệu vào phản hồi
+        ], 200);
     }
 
     public function destroy()
