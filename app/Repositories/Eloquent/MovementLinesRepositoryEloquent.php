@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\MovementLinesRepository;
+use App\Repositories\Contracts\MovementLinesRepository;
 use App\Models\MovementLines;
 use App\Validators\MovementLinesValidator;
 

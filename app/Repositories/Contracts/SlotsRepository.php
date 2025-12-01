@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Contracts\Repositories;
+namespace App\Repositories\Contracts;
 
 use Prettus\Repository\Contracts\RepositoryInterface;
 
 /**
  * Interface SlotsRepository.
  *
- * @package namespace App\Contracts\Repositories;
+ * @package namespace App\Repositories\Contracts;
  */
 interface SlotsRepository extends RepositoryInterface
 {

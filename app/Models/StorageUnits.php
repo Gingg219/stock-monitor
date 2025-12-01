@@ -46,4 +46,16 @@ class StorageUnits extends Model implements Transformable
     {
         return $this->hasMany(MovementLines::class, 'storage_unit_id');
     }
+
+    public function part()
+    {
+        return $this->belongsTo(Parts::class);
+    }
+
+
+    public function slot()
+    {
+        return $this->belongsTo(Slots::class, 'current_slot_id');
+    }
+
 }

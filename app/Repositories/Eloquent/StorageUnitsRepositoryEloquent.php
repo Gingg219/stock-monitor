@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\StorageUnitsRepository;
+use App\Repositories\Contracts\StorageUnitsRepository;
 use App\Models\StorageUnits;
 use App\Validators\StorageUnitsValidator;
 

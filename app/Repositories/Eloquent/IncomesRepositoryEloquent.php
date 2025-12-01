@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\IncomesRepository;
+use App\Repositories\Contracts\IncomesRepository;
 use App\Models\Incomes;
 use App\Validators\IncomesValidator;
 

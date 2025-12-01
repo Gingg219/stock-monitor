@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\StockLedgerRepository;
+use App\Repositories\Contracts\StockLedgerRepository;
 use App\Models\StockLedger;
 use App\Validators\StockLedgerValidator;
 

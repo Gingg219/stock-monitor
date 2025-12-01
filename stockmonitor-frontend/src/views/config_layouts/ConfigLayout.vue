@@ -29,66 +29,112 @@ const error = ref('')
  * thành dạng:
  * { id, wh, rack, tier, slot, pack, part, backend_id }
  */
-function flattenLayouts(data) {
-  const result = []
-  let idCounter = 1
 
-  data?.forEach(wh => {
-    wh.racks?.forEach(rack => {
-      rack.tiers?.forEach(tier => {
-        tier.slots?.forEach(slot => {
-          // nếu có fixed_locations: mỗi fixed_location tương ứng 1 dòng
-          if (slot.fixed_locations && slot.fixed_locations.length > 0) {
-            slot.fixed_locations.forEach(fx => {
-              const part = fx.parts
-              result.push({
-                id: idCounter++,
-                backend_id: fx.id ?? null,      // id fixed_location trong DB
-                wh: wh.code,                    // kho
-                rack: rack.code,                // dãy
-                tier: tier.level_no,            // tầng
-                slot: slot.code,                // vị trí
-                pack: slot.allowed_unit || '',  // Pallet/Box...
-                part: part?.part_no || '',      // mã linh kiện
-              })
-            })
-          } else {
-            // không có fixed_locations: vẫn hiển thị dòng trống part
-            result.push({
-              id: idCounter++,
-              backend_id: null,
-              wh: wh.code,
-              rack: rack.code,
-              tier: tier.level_no,
-              slot: slot.code,
-              pack: slot.allowed_unit || '',
-              part: '',
-            })
-          }
-        })
-      })
-    })
+const warehouseCodes = computed(() => {
+  const set = new Set()
+  layouts.value.forEach(wh => {
+    if (wh.code) set.add(wh.code)
   })
-  return result
-}
+  return Array.from(set)
+})
 
-// load dữ liệu khi component mount
+
+// sau khi load dữ liệu, nếu activeWH chưa set thì cho nó = kho đầu tiên
 onMounted(async () => {
   try {
     loading.value = true
     const res = await getLayouts()
     const data = res?.data ?? []
 
+
     layouts.value = data
     rows.value = flattenLayouts(data)
     nextId = rows.value.length + 1
+
+
+    if (!activeWH.value && data.length) {
+      activeWH.value = data[0].code
+    }
   } catch (err) {
-    console.error(err)
-    error.value = 'Get layouts fail'
+    
   } finally {
     loading.value = false
   }
 })
+
+function flattenLayouts(data) {
+  const result = []
+  let idCounter = 1
+
+  data?.forEach((wh) => {
+    const whCode = wh.code
+    const mode = wh.mode // 'fixed' hoặc kiểu khác
+
+    wh.racks?.forEach((rack) => {
+      rack.tiers?.forEach((tier) => {
+        tier.slots?.forEach((slot) => {
+          const pack = slot.allowed_unit || ''
+
+          if (mode === 'fixed') {
+            // ===== KHO 2: dùng fixed_locations =====
+            const fxList = slot.fixed_locations || []
+
+            if (fxList.length) {
+              fxList.forEach((fx) => {
+                const part = fx.parts || null
+
+                result.push({
+                  id: idCounter++,
+                  backend_id: fx.id ?? null,      // id fixed_location trong DB
+                  wh: whCode,
+                  rack: rack.code,
+                  tier: tier.level_no,
+                  slot: slot.code,
+                  pack,
+                  part: part?.part_no || '',
+                  mode,
+                  current_qty: 0,                 // optional, K2 không dùng
+                })
+              })
+            } else {
+              // slot không có fixed_location nào -> vẫn hiển thị dòng trống
+              result.push({
+                id: idCounter++,
+                backend_id: null,
+                wh: whCode,
+                rack: rack.code,
+                tier: tier.level_no,
+                slot: slot.code,
+                pack,
+                part: '',
+                mode,
+                current_qty: 0,
+              })
+            }
+          } else {
+            // ===== KHO 1: dùng current_part hiện tại trên slot =====
+            const currentPart = slot.current_part || null
+
+            result.push({
+              id: idCounter++,
+              backend_id: null,                 // không phải fixed_location
+              wh: whCode,
+              rack: rack.code,
+              tier: tier.level_no,
+              slot: slot.code,
+              pack,
+              part: currentPart?.part_no || '',
+              mode,
+              current_qty: slot.current_qty ?? 0,
+            })
+          }
+        })
+      })
+    })
+  })
+
+  return result
+}
 
 /* ------------------ State cho UI ------------------ */
 
@@ -180,6 +226,10 @@ function openCreate() {
 
 function openEdit(row) {
   editingId.value = row.id
+  console.log(row.id);
+  console.log('0000');
+  console.log(row.backend_id);
+  
   editingBackendId.value = row.backend_id ?? null
 
   Object.assign(form, {
@@ -212,6 +262,7 @@ async function saveForm() {
   try {
     // UPDATE: đã có record fixed_location trong DB
     if (editingBackendId.value) {
+      
       await updateLayout(editingBackendId.value, payload)
 
       const idx = rows.value.findIndex(r => r.id === editingId.value)
@@ -330,10 +381,16 @@ async function doDelete() {
     <CCardBody>
       <CContainer fluid class="my-2">
         <CButtonGroup role="group" aria-label="warehouse">
-          <CFormCheck v-model="activeWH" type="radio" :button="{ color: 'primary', variant: 'outline' }"
-                      name="wh" value="K1" label="Kho 1" />
-          <CFormCheck v-model="activeWH" type="radio" :button="{ color: 'primary', variant: 'outline' }"
-                      name="wh" value="K2" label="Kho 2" />
+          <CFormCheck
+            v-for="code in warehouseCodes"
+            :key="code"
+            v-model="activeWH"
+            type="radio"
+            :button="{ color: 'primary', variant: 'outline' }"
+            name="wh"
+            :value="code"
+            :label="code"
+          />
         </CButtonGroup>
       </CContainer>
 

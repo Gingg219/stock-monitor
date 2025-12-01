@@ -233,7 +233,7 @@ return [
         'paths'=>[
             'models'=>'Models',
             'repositories'=>'Repositories\\Eloquent',
-            'interfaces'=>'Contracts\\Repositories',
+            'interfaces'=>'Repositories\\Contracts',
             'transformers'=>'Transformers',
             'presenters'=>'Presenters',
             'validators'   => 'Validators',

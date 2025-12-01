@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\SlotsRepository;
+use App\Repositories\Contracts\SlotsRepository;
 use App\Models\Slots;
 use App\Validators\SlotsValidator;
 

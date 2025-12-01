@@ -4,7 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Contracts\Repositories\FixedLocationsRepository;
+use App\Repositories\Contracts\FixedLocationsRepository;
 use App\Models\FixedLocations;
 use App\Validators\FixedLocationsValidator;
 
