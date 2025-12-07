@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\IncomeController;
 use App\Http\Controllers\Api\Admin\LocationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,11 +28,18 @@ Route::middleware('api')->group(function () {
         
         //Admin
         Route::group(['prefix' => 'admin'], function () {
+
+            //Location
             Route::get('/locations', [LocationController::class, 'index'])
             ->middleware('role:admin');
-
             Route::put('/locations/{id}', [LocationController::class, 'update'])
             ->middleware('role:admin');
+
+            //Income
+            Route::get('/incomes', [IncomeController::class, 'index']);
+            Route::get('/api/admin/incomes/{id}', [IncomeController::class,'show']);
+            Route::post('/incomes', [IncomeController::class, 'store']);
+
         });
         
         //User

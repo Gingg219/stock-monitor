@@ -14,6 +14,7 @@ use Prettus\Repository\Traits\TransformableTrait;
 class IncomeLines extends Model implements Transformable
 {
     use TransformableTrait;
+    public $timestamps = false;
 
     /**
      * The attributes that are mass assignable.
@@ -33,6 +34,21 @@ class IncomeLines extends Model implements Transformable
     public function storage_units()
     {
         return $this->hasMany(StorageUnits::class, 'income_line_id');
+    }
+
+    public function parts()
+    {
+        return $this->belongsTo(Parts::class, 'part_id');
+    }
+
+    public function vendors()
+    {
+        return $this->belongsTo(Vendors::class, 'vendor_id');
+    }
+
+    public function income()
+    {
+        return $this->belongsTo(Incomes::class, 'income_id');
     }
 
 }

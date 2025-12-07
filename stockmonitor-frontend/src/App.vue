@@ -3,6 +3,7 @@ import { onBeforeMount } from 'vue'
 import { useColorModes } from '@coreui/vue'
 
 import { useThemeStore } from '@/stores/theme.js'
+import ToastContainer from '@/components/ToastContainer.vue'
 
 const { isColorModeSet, setColorMode } = useColorModes(
   'coreui-free-vue-admin-template-theme',
@@ -32,6 +33,7 @@ onBeforeMount(() => {
 
 <template>
   <router-view />
+  <ToastContainer /> 
 </template>
 
 <style lang="scss">

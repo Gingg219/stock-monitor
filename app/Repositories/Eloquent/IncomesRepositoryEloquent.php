@@ -6,6 +6,7 @@ use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\IncomesRepository;
 use App\Models\Incomes;
+use App\Repositories\Traits\RepositoryTraits;
 use App\Validators\IncomesValidator;
 
 /**
@@ -15,6 +16,7 @@ use App\Validators\IncomesValidator;
  */
 class IncomesRepositoryEloquent extends BaseRepository implements IncomesRepository
 {
+    use RepositoryTraits;
     /**
      * Specify Model class name
      *
@@ -30,9 +32,21 @@ class IncomesRepositoryEloquent extends BaseRepository implements IncomesReposit
     /**
      * Boot up the repository, pushing criteria
      */
-    public function boot()
+    public function buildQuery($model, $filters)
     {
-        $this->pushCriteria(app(RequestCriteria::class));
+        if($this->isValidKey($filters, 'income_lines')) {
+            $incomeLineID = $filters['income_lines'];
+            $model = $model->whereHas('income_lines', function ($query) use ($incomeLineID) {
+                $query->where('income_lines.id', $incomeLineID);
+            });
+        }
+        
+        return $model;
     }
+
+    // public function boot()
+    // {
+    //     $this->pushCriteria(app(RequestCriteria::class));
+    // }
     
 }

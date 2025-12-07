@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
@@ -14,6 +15,7 @@ use Prettus\Repository\Traits\TransformableTrait;
 class Incomes extends Model implements Transformable
 {
     use TransformableTrait;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.

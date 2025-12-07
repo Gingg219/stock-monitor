@@ -12,7 +12,7 @@ return new class extends Migration {
             $t->string('invoice_no')->nullable();
             $t->timestamp('received_at')->useCurrent();
             $t->text('note')->nullable();
-            $t->foreignId('created_by')->nullable()->constrained('app_users');
+            $t->foreignId('created_by')->nullable()->constrained('users');
             $t->timestamps();
             $t->unique(['income_no','invoice_no']);
         });
