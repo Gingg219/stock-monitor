@@ -440,6 +440,7 @@ function onSaveQr(payload) {
                   <CTableHeaderCell>Tổng số lượng</CTableHeaderCell>
                   <CTableHeaderCell>Ngày về</CTableHeaderCell>
                   <CTableHeaderCell>Ngày nhận</CTableHeaderCell>
+                  <CTableHeaderCell>Người nhận</CTableHeaderCell>
                   <CTableHeaderCell class="text-end">Thao tác</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -454,6 +455,7 @@ function onSaveQr(payload) {
                   <CTableDataCell>{{ (row.total_qty ?? 0).toLocaleString() }}</CTableDataCell>
                   <CTableDataCell>{{ row.received_at.slice(0, 10) }}</CTableDataCell>
                   <CTableDataCell>{{ row.created_at_display ?? (row.created_at ? String(row.created_at).slice(0,19).replace('T',' ') : '') }}</CTableDataCell>
+                  <CTableDataCell>{{ (row.user.name) }}</CTableDataCell>
                   <CTableDataCell class="text-end">
                     <CButton
                       size="sm"

@@ -41,6 +41,7 @@ class IncomeService implements IncomeServiceInterface
                 'income_lines:id,part_id,vendor_id,income_id,qty_total,lot_no,expiry_date,remark',
                 'income_lines.parts:id,part_no,name,snp,has_expiry,expiry_days',
                 'income_lines.vendors:id,code,name',
+                'user:id,name,email',
             ],
             ['created_at' => 'desc']
         );

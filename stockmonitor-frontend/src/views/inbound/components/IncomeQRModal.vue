@@ -144,6 +144,15 @@ const totals = computed(() => {
   return { pal, box, qty }
 })
 
+function saveGenerated() {
+  if (!generated.value.length) {
+    errorMsg.value = 'Chưa có nhãn để lưu. Hãy bấm "Sinh QR" trước.'
+    return
+  }
+  const slim = generated.value.map(g => ( {lineNo:g.lineNo, code:g.code, type:g.type, qty:g.qty, part_no:g.part_no, lot_no:g.lot_no, expiry:g.expiry }))
+  emit('save', { incomeId: income.value?.id ?? null, income_no: income.value?.income_no ?? null, received_at: income.value?.received_at ?? null, labels: slim })
+}
+
 function printLabels() {
   if (!income.value) return
   const win = window.open('', '_blank')
@@ -154,15 +163,6 @@ function printLabels() {
   })
   const html = '<!doctype html><html><head><meta charset="utf-8"><title>Labels - ' + income.value.income_no + '</title><style>body{font-family:Arial,sans-serif;margin:16px;}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}.card{border:1px solid #ddd;border-radius:8px;padding:8px;}.code{font-weight:700;margin:4px 0 6px 0;}.meta{font-size:12px;color:#555;line-height:1.35;}.qr{display:flex;justify-content:center;margin:6px 0;}hr{border:none;border-top:1px dashed #ccc;margin:6px 0;}</style></head><body><h3>Labels for ' + income.value.income_no + '</h3><div class="grid">' + body + '</div><script>window.onload=function(){window.print()}</' + 'script></body></html>'
   win.document.open(); win.document.write(html); win.document.close()
-}
-
-function saveGenerated() {
-  if (!generated.value.length) {
-    errorMsg.value = 'Chưa có nhãn để lưu. Hãy bấm "Sinh QR" trước.'
-    return
-  }
-  const slim = generated.value.map(g => ({ code:g.code, type:g.type, qty:g.qty, part_no:g.part_no, lot_no:g.lot_no, expiry:g.expiry }))
-  emit('save', { incomeId: income.value?.id ?? null, income_no: income.value?.income_no ?? null, labels: slim })
 }
 
 const showAdminConfirm = ref(false)

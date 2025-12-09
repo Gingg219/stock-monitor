@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\IncomeController;
 use App\Http\Controllers\Api\Admin\LocationController;
+use App\Http\Controllers\Api\Admin\StorageUnitController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,9 @@ Route::middleware('api')->group(function () {
             Route::get('/incomes', [IncomeController::class, 'index']);
             Route::get('/api/admin/incomes/{id}', [IncomeController::class,'show']);
             Route::post('/incomes', [IncomeController::class, 'store']);
+
+            //StorageUnit
+            Route::post('/storage-unit', [StorageUnitController::class, 'store']);
 
         });
         
