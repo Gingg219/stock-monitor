@@ -20,7 +20,7 @@ class StoreIncomeRequest extends FormRequest
             'warehouse_id' => 'required|integer|exists:warehouses,id',
             'income_no' => 'required|string|max:255',
             'invoice_no' => 'nullable|string|max:255',
-            'date' => 'required|date',
+            'received_at' => 'required|date',
 
             'lines' => 'required|array|min:1',
             'lines.*.id' => 'nullable|integer',
@@ -38,7 +38,7 @@ class StoreIncomeRequest extends FormRequest
         return [
             'warehouse_id.required' => 'Bạn chưa chọn kho',
             'income_no.required' => 'Số chứng từ không được để trống',
-            'date.required' => 'Ngày chứng từ không được để trống',
+            'received_at.required' => 'Ngày chứng từ không được để trống',
             'lines.required' => 'Phải có ít nhất một dòng hàng',
             'lines.*.part_no.required' => 'Mã part không được để trống',
             'lines.*.vendor_code.required' => 'Mã vendor không được để trống',

@@ -89,7 +89,7 @@ const pageNumbers = computed(() => {
   return arr
 })
 
-//Fetch incomes list from API
+// Fetch incomes list from API
 async function loadIncomes(page = 1, perPage = pagination.value.per_page) {
   try {
     const res = await fetchIncomes({ page, per_page: perPage })
@@ -120,6 +120,7 @@ async function loadIncomes(page = 1, perPage = pagination.value.per_page) {
     toast.error('Lỗi tải danh sách chứng từ nhập', 'Lỗi')
   }
 }
+
 onMounted(() => loadIncomes())
 
 
@@ -163,6 +164,7 @@ async function saveIncome () {
     return
   }
 
+
   const total = lines.value.reduce((s, l) => s + (Number(l.qty_total) || 0), 0)
   if (total <= 0) {
     toast.error('Tổng qty phải lớn hơn 0', 'Lỗi')
@@ -175,7 +177,7 @@ async function saveIncome () {
     warehouse_id: form.warehouse_id,
     income_no: form.income_no,
     invoice_no: form.invoice_no,
-    date: form.date,
+    received_at: form.received_at,
     lines: lines.value.map(l => ({
       id: l.id ?? null,                // server id or null
       part_id: l.part_id ?? null,      // prefer part_id; otherwise part_no
@@ -188,28 +190,34 @@ async function saveIncome () {
     })),
   }
 
+  const page = (pagination.value && pagination.value.current_page) ? pagination.value.current_page : 1
+
   // gọi API
   try {
     // show pending toast (optional)
     toast.info('Đang lưu...', 'Vui lòng chờ', 2000)
 
     // gọi API: dùng hàm bạn import
+    console.log(payload);
+   
     const res = await storeIncome(editingId.value, payload)
+    console.log(payload);
     const data = res.data || res // bảo toàn nếu axios wrapper trả .data hoặc trực tiếp
 
     // cập nhật incomes list theo response
     if (!editingId.value) {
       // tạo mới: thêm vào đầu
-      incomes.value.unshift({
-        id: data.id,
-        income_no: data.income_no,
-        invoice_no: data.invoice_no,
-        date: data.date,
-        total_qty: data.total_qty ?? total,
-        lines: data.lines ?? payload.lines,
-      })
+      // incomes.value.unshift({
+      //   id: data.id,
+      //   income_no: data.income_no,
+      //   invoice_no: data.invoice_no,
+      //   received_at: data.received_at,
+      //   total_qty: data.total_qty ?? total,
+      //   lines: data.lines ?? payload.lines,
+      // })
       highlightedId.value = data.id
       toast.success(`Đã lưu chứng từ mới: ${form.income_no}`, 'Lưu thành công')
+      await loadIncomes(page)
     } else {
       // update: tìm và cập nhật
       const idx = incomes.value.findIndex(r => r.id === editingId.value)
@@ -219,7 +227,7 @@ async function saveIncome () {
           id: data.id ?? editingId.value,
           income_no: data.income_no ?? payload.income_no,
           invoice_no: data.invoice_no ?? payload.invoice_no,
-          date: data.date ?? payload.date,
+          received_at: data.received_at ?? payload.received_at,
           total_qty: data.total_qty ?? total,
           lines: data.lines ?? payload.lines,
         }
@@ -229,16 +237,16 @@ async function saveIncome () {
           id: data.id,
           income_no: data.income_no,
           invoice_no: data.invoice_no,
-          date: data.date,
+          received_at: data.received_at,
           total_qty: data.total_qty ?? total,
           lines: data.lines ?? payload.lines,
         })
       }
       highlightedId.value = editingId.value
       toast.success(`Đã cập nhật chứng từ: ${payload.income_no}`, 'Lưu thành công')
+      await loadIncomes(page)
     }
-    const page = (pagination.value && pagination.value.current_page) ? pagination.value.current_page : 1
-    await loadIncomes(page)
+
 
     // sau khi lưu thì clear form & thoát chế độ sửa
     editingId.value = null
@@ -246,9 +254,6 @@ async function saveIncome () {
 
     // cuộn xuống lịch sử (nếu muốn)
     await nextTick()
-    if (historyRef.value) {
-      historyRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
   } catch (err) {
     // xử lý lỗi từ API
     console.error(err)
@@ -285,13 +290,14 @@ function openQrModal (income) {
 }
 
 //Edit income function can be added here
-const editingId = ref(null) 
+const editingId = ref(null)
 const highlightedId = ref(null)
 
 function clearForm () {
   form.income_no = ''
   form.invoice_no = ''
-  form.date = new Date().toISOString().slice(0, 10)
+  form.received_at = ''
+
 
   // reset lines về 1 dòng trống
   lines.value = []
@@ -304,8 +310,10 @@ async function startEdit (income) {
   // fill header
   form.income_no = income.income_no
   form.invoice_no = income.invoice_no
-  // form.date = income.received_at ? dayjs(income.received_at).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
-  form.date = income.received_at.slice(0, 10)
+  // form.received_at = income.received_at ? dayjs(income.received_at).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
+  form.received_at = income.received_at.slice(0, 10)
+
+
 
 
   // clone lines để sửa, không mutate trực tiếp lịch sử
@@ -321,10 +329,18 @@ async function startEdit (income) {
     qty_total: l.qty_total
   }))
 
-  if (!income_lines.value.length) addLine()
+
+  if (!income.income_lines.length) addLine()
   await nextTick()
   window.scrollTo({ top:0, behavior:'smooth' })
 }
+
+function onSaveQr(payload) {
+  // gọi API lưu labels
+  console.log('labels from modal', payload)
+  // storeGeneratedLabels(payload.incomeId, payload).then(...)
+}
+
 
 </script>
 
@@ -350,7 +366,7 @@ async function startEdit (income) {
             <CFormInput v-model="form.income_no" label="Invoice No" />
           </CCol>
           <CCol md="3">
-            <CFormInput v-model="form.date" type="date" label="Ngày" />
+            <CFormInput v-model="form.received_at" type="date" label="Ngày về" />
           </CCol>
         </CRow>
 
@@ -422,7 +438,8 @@ async function startEdit (income) {
                   <CTableHeaderCell>Invoice No</CTableHeaderCell>
                   <CTableHeaderCell>Số part</CTableHeaderCell>
                   <CTableHeaderCell>Tổng số lượng</CTableHeaderCell>
-                  <CTableHeaderCell>Ngày</CTableHeaderCell>
+                  <CTableHeaderCell>Ngày về</CTableHeaderCell>
+                  <CTableHeaderCell>Ngày nhận</CTableHeaderCell>
                   <CTableHeaderCell class="text-end">Thao tác</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -435,7 +452,8 @@ async function startEdit (income) {
                   <CTableDataCell>{{ row.income_no }}</CTableDataCell>
                   <CTableDataCell>{{ (row.income_lines.length) }}</CTableDataCell>
                   <CTableDataCell>{{ (row.total_qty ?? 0).toLocaleString() }}</CTableDataCell>
-                  <CTableDataCell>{{ row.received_at }}</CTableDataCell>
+                  <CTableDataCell>{{ row.received_at.slice(0, 10) }}</CTableDataCell>
+                  <CTableDataCell>{{ row.created_at_display ?? (row.created_at ? String(row.created_at).slice(0,19).replace('T',' ') : '') }}</CTableDataCell>
                   <CTableDataCell class="text-end">
                     <CButton
                       size="sm"
@@ -510,6 +528,7 @@ async function startEdit (income) {
   <IncomeQrModal
     v-model:visible="showQrModal"
     :income="selectedIncome"
+    @save="onSaveQr"
   />
 </template>
 

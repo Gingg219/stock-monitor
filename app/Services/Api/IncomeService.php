@@ -60,7 +60,7 @@ class IncomeService implements IncomeServiceInterface
         $incomeData = [
             'income_no'   => $request['income_no'] ?? null,
             'invoice_no'  => $request['invoice_no'] ?? null,
-            'received_at' => $request['received_at'] ?? now(),
+            'received_at' => $request['received_at'],
             'note'        => $request['note'] ?? null,
             'created_by'  => $createdBy,
         ];
