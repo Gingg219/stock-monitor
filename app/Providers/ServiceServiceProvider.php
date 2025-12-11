@@ -16,6 +16,7 @@ class ServiceServiceProvider extends ServiceProvider
         WarehouseServiceInterface::class => WarehouseService::class,
         IncomeServiceInterface::class => IncomeService::class,
         StorageUnitServiceInterface::class => StorageUnitService::class,
+        // \App\Services\Contracts\WarehouseServiceInterface::class => \App\Services\Contracts\WarehouseServiceInterface::class,
     ];
     /**
      * Register services.

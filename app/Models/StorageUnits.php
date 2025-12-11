@@ -52,10 +52,13 @@ class StorageUnits extends Model implements Transformable
         return $this->belongsTo(Parts::class);
     }
 
-
     public function slot()
     {
         return $this->belongsTo(Slots::class, 'current_slot_id');
     }
 
+    public function income_lines()
+    {
+        return $this->belongsTo(IncomeLines::class, 'income_line_id');
+    }
 }

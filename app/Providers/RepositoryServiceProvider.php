@@ -29,6 +29,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(\App\Repositories\Contracts\PartsRepository::class, \App\Repositories\Eloquent\PartsRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\VendorsRepository::class, \App\Repositories\Eloquent\VendorsRepositoryEloquent::class);
         $this->app->bind(\App\Repositories\Contracts\StorageUnitsRepository::class, \App\Repositories\Eloquent\StorageUnitsRepositoryEloquent::class);
+        $this->app->bind(\App\Repositories\Contracts\SlotsRepository::class, \App\Repositories\Eloquent\SlotsRepositoryEloquent::class);
         //:end-bindings:
     }
 }

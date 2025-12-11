@@ -323,7 +323,7 @@ function confirmAdmin() {
 
           <!-- Preview QR sinh ra -->
           <div v-if="generated.length" class="mt-4">
-            <h6 class="mb-2">Preview nhãn ({{ generated.length }})</h6>
+            <h6 class="mb-2">Xem trước nhãn ({{ generated.length }})</h6>
             <div class="qr-grid">
               <div class="qr-card" v-for="g in generated" :key="g.code">
                 <div class="qr-code">{{ g.code }}</div>

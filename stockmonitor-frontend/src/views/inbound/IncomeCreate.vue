@@ -13,6 +13,7 @@ import { cilPencil, cilTrash, cilPlus, cilSave, cilQrCode } from '@coreui/icons'
 import IncomeQrModal from '@/views/inbound/components/IncomeQRModal.vue'
 import { useToast } from '@/composables/useToast'
 import { storeIncome ,fetchIncomes, fetchIncome } from '@/api/incomes'
+import { storeStorageUnit } from '@/api/storageUnits'
 // import dayjs from 'dayjs'
 
 const toast = useToast()
@@ -194,14 +195,8 @@ async function saveIncome () {
 
   // gọi API
   try {
-    // show pending toast (optional)
-    toast.info('Đang lưu...', 'Vui lòng chờ', 2000)
-
     // gọi API: dùng hàm bạn import
-    console.log(payload);
-   
     const res = await storeIncome(editingId.value, payload)
-    console.log(payload);
     const data = res.data || res // bảo toàn nếu axios wrapper trả .data hoặc trực tiếp
 
     // cập nhật incomes list theo response
@@ -326,7 +321,7 @@ async function startEdit (income) {
     vendor_code: l.vendors.code ?? null,
     lot_no: l.lot_no,
     expiry: l.expiry_date ?? null,
-    qty_total: l.qty_total
+    qty_total: Math.floor(l.qty_total)
   }))
 
 
@@ -335,10 +330,37 @@ async function startEdit (income) {
   window.scrollTo({ top:0, behavior:'smooth' })
 }
 
-function onSaveQr(payload) {
-  // gọi API lưu labels
-  console.log('labels from modal', payload)
-  // storeGeneratedLabels(payload.incomeId, payload).then(...)
+async function onSaveQr(payload) {
+  try {
+    
+    // gọi API lưu labels
+    console.log('labels from modal', payload)
+
+    const res = await storeStorageUnit(payload)
+    const data = res.data || res
+    toast.success(`Đã tạo QR cho Income: ${payload.income_no}`, 'Tạo thành công')
+    
+  } catch (err) {
+    // xử lý lỗi từ API
+    console.error(err)
+
+    // nếu axios trả validation 422
+    if (err.response) {
+      const errors = err.response.data.errors || {}
+      // lấy first error message
+      const firstKey = Object.keys(errors)[0]
+      const firstMsg = firstKey ? errors[firstKey][0] : 'Dữ liệu không hợp lệ'
+      toast.error(firstMsg, 'Lỗi xác thực')
+      return
+    }
+
+    // lỗi auth
+    if (err.response && err.response.status === 401) {
+      toast.error('Bạn chưa đăng nhập hoặc phiên đã hết hạn', 'Lỗi')
+      return
+    }
+  }
+
 }
 
 

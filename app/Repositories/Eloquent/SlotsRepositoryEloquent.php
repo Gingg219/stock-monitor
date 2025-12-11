@@ -6,6 +6,7 @@ use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\SlotsRepository;
 use App\Models\Slots;
+use App\Repositories\Traits\RepositoryTraits;
 use App\Validators\SlotsValidator;
 
 /**
@@ -15,6 +16,7 @@ use App\Validators\SlotsValidator;
  */
 class SlotsRepositoryEloquent extends BaseRepository implements SlotsRepository
 {
+    use RepositoryTraits;
     /**
      * Specify Model class name
      *
@@ -25,7 +27,10 @@ class SlotsRepositoryEloquent extends BaseRepository implements SlotsRepository
         return Slots::class;
     }
 
-    
+    public function buildQuery($model, $filters)
+    {
+        return $model;
+    }
 
     /**
      * Boot up the repository, pushing criteria
