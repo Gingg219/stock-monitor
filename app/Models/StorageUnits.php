@@ -30,6 +30,8 @@ class StorageUnits extends Model implements Transformable
         'qty',
         'warehouse_id',
         'current_slot_id',
+        'sequence',
+        'status',
     ];
 
     protected $hidden = [

@@ -43,6 +43,7 @@ Route::middleware('api')->group(function () {
 
             //StorageUnit
             Route::post('/storage-unit', [StorageUnitController::class, 'store']);
+            Route::get('/storage-unit/{income_line_id}', [StorageUnitController::class, 'getLatestCode']);
 
         });
         

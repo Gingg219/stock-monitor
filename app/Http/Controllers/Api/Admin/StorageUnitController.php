@@ -39,7 +39,7 @@ class StorageUnitController extends Controller
             'income_no' => 'nullable|string',
             // 'labels' => 'required|array|min:1',
             'labels.*.code' => 'required|string',
-            'labels.*.type' => ['required','string', Rule::in(['PALLET','BOX'])],
+            'labels.*.type' => 'required|string',
             'labels.*.qty' => 'required|numeric|min:0',
             'labels.*.part_no' => 'nullable|string',
             'labels.*.lot_no' => 'nullable|string',
@@ -61,6 +61,17 @@ class StorageUnitController extends Controller
             'success' => true,
             'data' => $income,
         ]);
+    }
+
+    public function getLatestCode($incomeId)
+    {
+        $data = $this->storageUnitService->getLatestCode($incomeId);
+
+        return response()->json([
+        'success' => true,
+        'data' => $data,
+        ]);
+
     }
 
 }

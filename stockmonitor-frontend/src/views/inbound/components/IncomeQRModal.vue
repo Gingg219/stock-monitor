@@ -159,7 +159,7 @@ function printLabels() {
   if (!win) return
   let body = ''
   generated.value.forEach(g => {
-    body += '<div class="card"><div class="code">' + g.code + '</div><div class="qr"><img src="' + g.qrDataUrl + '" alt="' + g.code + '" /></div><div class="meta"><div>Type: ' + g.type + ' • Qty: ' + g.qty + '</div><div>Part: ' + g.part_no + '</div><div>Lot: ' + g.lot_no + '</div><div>Exp: ' + g.expiry + '</div><div>Line: ' + g.lineNo + '</div></div></div>'
+    body += '<div class="card"><div class="code">' + g.code + '</div><div class="qr"><img src="' + g.qrDataUrl + '" alt="' + g.code + '" /></div><div class="meta"><div>Type: ' + g.type + ' • Qty: ' + g.qty + '</div><div>Part: ' + g.part_no + '</div><div>Lot: ' + g.lot_no + '</div><div>Line: ' + g.lineNo + '</div></div></div>'
   })
   const html = '<!doctype html><html><head><meta charset="utf-8"><title>Labels - ' + income.value.income_no + '</title><style>body{font-family:Arial,sans-serif;margin:16px;}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}.card{border:1px solid #ddd;border-radius:8px;padding:8px;}.code{font-weight:700;margin:4px 0 6px 0;}.meta{font-size:12px;color:#555;line-height:1.35;}.qr{display:flex;justify-content:center;margin:6px 0;}hr{border:none;border-top:1px dashed #ccc;margin:6px 0;}</style></head><body><h3>Labels for ' + income.value.income_no + '</h3><div class="grid">' + body + '</div><script>window.onload=function(){window.print()}</' + 'script></body></html>'
   win.document.open(); win.document.write(html); win.document.close()
@@ -332,7 +332,6 @@ function confirmAdmin() {
                   <div>{{ g.type }} • Qty: {{ g.qty }}</div>
                   <div>Part: {{ g.part_no }}</div>
                   <div>Lot: {{ g.lot_no }}</div>
-                  <div>Exp: {{ g.expiry }}</div>
                 </div>
               </div>
             </div>

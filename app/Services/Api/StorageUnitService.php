@@ -8,6 +8,7 @@ use App\Repositories\Contracts\PartsRepository;
 use App\Repositories\Contracts\SlotsRepository;
 use App\Repositories\Contracts\StorageUnitsRepository;
 use App\Services\Contracts\StorageUnitServiceInterface;
+use Illuminate\Support\Facades\DB;
 
 class StorageUnitService implements StorageUnitServiceInterface
 {
@@ -36,7 +37,7 @@ class StorageUnitService implements StorageUnitServiceInterface
         $this->slotRepo = $slotRepo;
     }
 
-     public function store($request)
+    public function store($request)
     {
         $income = $this->incomeRepo->find($request['incomeId']);
         if (!$income) {
@@ -87,15 +88,15 @@ class StorageUnitService implements StorageUnitServiceInterface
 
             // map fields to storage_units columns
             $suData = [
-                'unit_type' => strtoupper($lab['type']),
+                'unit_type' => strtolower($lab['type']),
                 'unit_code' => $lab['code'],
                 'income_line_id' => $incomeLineId,
                 'part_id' => $partId,
                 'lot_no' => $lab['lot_no'] ?? null,
                 'expiry_date' => !empty($lab['expiry']) ? date('Y-m-d', strtotime($lab['expiry'])) : null,
                 'qty' => $lab['qty'] ?? 0,
-                'warehouse_id' => $income->warehouse_id ?? ($request->input('warehouse_id') ?? null),
-                'current_slot_id' => $request->input('current_slot_id') ?? null,
+                'warehouse_id' =>  null,
+                'current_slot_id' =>  null,
             ];
 
             // create storage unit
@@ -103,5 +104,36 @@ class StorageUnitService implements StorageUnitServiceInterface
             $created[] = $su;
         }
         return $created;
+    }
+
+    function getLatestCode($incomeId) {
+
+        $results = DB::table('storage_units')
+        ->select([
+            'storage_units.part_id',
+            'storage_units.unit_type',
+            'parts.part_no',
+            // Các hàm tổng hợp
+            DB::raw('SUM(storage_units.qty) as total_qty'),
+            DB::raw('MAX(storage_units.sequence) as sequence_latest'),
+
+            // Lấy thông tin từ income_lines, những trường này phải có trong GROUP BY
+            'income_lines.income_id',
+        ])
+        // Tham gia với bảng income_lines để có thể lọc theo income_id
+        ->join('income_lines', 'storage_units.income_line_id', '=', 'income_lines.id')
+        ->join('parts', 'income_lines.part_id', '=', 'parts.id')
+        // Lọc theo income_id cụ thể
+        ->where('income_lines.income_id', $incomeId)
+        // Nhóm theo các cột không tổng hợp
+        ->groupBy([
+            'storage_units.part_id',
+            'storage_units.unit_type',
+            'parts.part_no',
+            'income_lines.income_id',
+        ])
+        ->get();
+
+        return $results;
     }
 }

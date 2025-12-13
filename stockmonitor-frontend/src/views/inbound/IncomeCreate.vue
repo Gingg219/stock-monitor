@@ -13,7 +13,7 @@ import { cilPencil, cilTrash, cilPlus, cilSave, cilQrCode } from '@coreui/icons'
 import IncomeQrModal from '@/views/inbound/components/IncomeQRModal.vue'
 import { useToast } from '@/composables/useToast'
 import { storeIncome ,fetchIncomes, fetchIncome } from '@/api/incomes'
-import { storeStorageUnit } from '@/api/storageUnits'
+import { storeStorageUnit, fetchLatestCode } from '@/api/storageUnits'
 // import dayjs from 'dayjs'
 
 const toast = useToast()
@@ -334,10 +334,17 @@ async function onSaveQr(payload) {
   try {
     
     // gọi API lưu labels
-    console.log('labels from modal', payload)
+    // console.log('labels from modal', payload)
+    // let dataFetch = []
+    // payload.labels.forEach( line => {
+    //   const latestCode =  fetchLatestCode(line.lineNo)
+    //   dataFetch.push(latestCode)
+    // });
 
     const res = await storeStorageUnit(payload)
     const data = res.data || res
+    
+    const latestCode =  fetchLatestCode(payload.incomeId)
     toast.success(`Đã tạo QR cho Income: ${payload.income_no}`, 'Tạo thành công')
     
   } catch (err) {
@@ -360,7 +367,6 @@ async function onSaveQr(payload) {
       return
     }
   }
-
 }
 
 
