@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, nextTick, computed, onMounted } from 'vue'
+import { ref, reactive, nextTick, computed, onMounted, watch } from 'vue'
 import {
   CCard, CCardHeader, CCardBody,
   CButton, CRow, CCol,
@@ -62,7 +62,7 @@ const historyRef = ref(null)         // dùng scroll xuống bảng
 
 /* ====== Save & “nhảy xuống dưới” ====== */
 
-const saveLabel = computed(() => (editingId.value ? 'Update' : 'Save'))
+const saveLabel = computed(() => (editingId.value ? 'Cập nhật' : 'Lưu'))
 const saving = ref(false)
 
 if (!lines.value.length) addLine()
@@ -330,21 +330,24 @@ async function startEdit (income) {
   window.scrollTo({ top:0, behavior:'smooth' })
 }
 
+const savedSuccessfully = ref(false)
+const qrPrinted = ref(false)
+
+watch(showQrModal, (v) => {
+  if (!v) {
+    savedSuccessfully.value = false
+    qrPrinted.value = false
+  }
+})
+
 async function onSaveQr(payload) {
   try {
-    
     // gọi API lưu labels
-    // console.log('labels from modal', payload)
-    // let dataFetch = []
-    // payload.labels.forEach( line => {
-    //   const latestCode =  fetchLatestCode(line.lineNo)
-    //   dataFetch.push(latestCode)
-    // });
+    console.log('labels from modal', payload)
 
-    const res = await storeStorageUnit(payload)
-    const data = res.data || res
-    
-    const latestCode =  fetchLatestCode(payload.incomeId)
+    await storeStorageUnit(payload)
+    payload.onSuccess?.()
+
     toast.success(`Đã tạo QR cho Income: ${payload.income_no}`, 'Tạo thành công')
     
   } catch (err) {
@@ -368,7 +371,6 @@ async function onSaveQr(payload) {
     }
   }
 }
-
 
 </script>
 
@@ -557,6 +559,8 @@ async function onSaveQr(payload) {
   <!-- Modal QR dùng component riêng -->
   <IncomeQrModal
     v-model:visible="showQrModal"
+    v-model:saved="savedSuccessfully"
+    v-model:printed="qrPrinted"
     :income="selectedIncome"
     @save="onSaveQr"
   />
