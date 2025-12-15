@@ -20,7 +20,7 @@ class StorageUnitController extends Controller
     /**
      * UserServiceInterface constructor.
      *
-     * @param IncomeServiceInterface $incomeService
+     * @param StorageUnitServiceInterface $storageUnitService
      */
     public function __construct(
         StorageUnitServiceInterface $storageUnitService,
@@ -72,6 +72,29 @@ class StorageUnitController extends Controller
         'data' => $data,
         ]);
 
+    }
+
+    public function assign(Request $req)
+    {
+        return $this->storageUnitService->assignLocation(
+            $req->only(['unit_code','slot_id'])
+        );
+    }
+
+    /** Scan put away */
+    public function scan(Request $req)
+    {
+        return $this->storageUnitService->scanPutAway(
+            $req->only(['unit_code','location_qr'])
+        );
+    }
+
+    /** Change location */
+    public function changeLocation(Request $req)
+    {
+        return $this->storageUnitService->changeLocation(
+            $req->only(['unit_code','slot_id'])
+        );
     }
 
 }

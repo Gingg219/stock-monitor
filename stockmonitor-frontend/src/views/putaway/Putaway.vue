@@ -1,296 +1,177 @@
 <script setup>
 import { ref, reactive } from 'vue'
-import {
-  CCard, CCardHeader, CCardBody, CRow, CCol,
-  CForm, CFormInput, CButton, CBadge, CAlert,
-  CTable, CTableHead, CTableRow, CTableHeaderCell, CTableBody, CTableDataCell,
-  CModal, CModalHeader, CModalTitle, CModalBody, CModalFooter,
-} from '@coreui/vue'
-import CIcon from '@coreui/icons-vue'
-import { cilQrCode, cilCheckCircle, cilX, cilShieldAlt } from '@coreui/icons'
 
-/* ================= Mock data ================= */
-const pallets = ref([
-  { code: 'PAL-INC-241025-001-01-001', part_no: 'QK2-0001-000', lot_no: 'LOT01', qty: 8000, wh: 'K1', location: null, status: 'new' },
-  { code: 'PAL-INC-241025-001-01-002', part_no: 'QK2-0001-000', lot_no: 'LOT01', qty: 8000, wh: 'K1', location: null, status: 'new' },
-  { code: 'BOX-INC-241025-001-01-001', part_no: 'QK2-0001-000', lot_no: 'LOT01', qty: 1000, wh: 'K1', location: null, status: 'new' },
-])
+const mode = ref('assign') // 'assign' | 'scan'
 
-// Layout đơn giản cho K1
-const racks = ['A', 'B', 'C']
-const tiers = [3, 2, 1]           // hiển thị từ trên xuống
-const slotsPerTier = 24
-const slots = Array.from({ length: slotsPerTier }, (_, i) => i + 1) // 1..24
+const form = reactive({
+  unit_code: '',
+  part_code: '',
+  warehouse: null,
+  rack: null,
+  tier: null,
+  slot: null,
+  location_qr: ''
+})
 
-/* ================= State ================= */
-const scanCode = ref('')           // ô scan Pallet
-const scanLoc = ref('')            // ô scan Location (QR vị trí)
-const selected = ref(null)         // pallet đang thao tác
-const pick = reactive({ rack: 'A', tier: 1, slot: 1 }) // vị trí dự kiến
-const message = ref('')
+const tableAvailable = ref([]) // status: available | allocated
+const filter1 = ref('')
 
-const putawayLogs = ref([]) // {code, expected, confirmed, by, time, override}
-
-/* ===== Admin override (khi sai vị trí) ===== */
-const showOverride = ref(false)
-const adminPass = ref('')
-const overrideReason = ref('')
-const expectedCache = ref('')
-const confirmedCache = ref('')
-
-/* ================= Helpers ================= */
-function slotLabel(rack, tier, slot) {
-  return rack + '-T' + tier + '-' + slot
-}
-function findPallet(code) {
-  const c = (code || '').trim().toLowerCase()
-  return pallets.value.find(p => p.code.toLowerCase() === c)
+// Hàm chọn dòng từ bảng (nếu có) để điền thông tin
+function selectRow(row) {
+  mode.value = 'assign'
+  form.unit_code = row.unit_code
+  form.part_code = row.part_code
 }
 
-/* ================= Actions ================= */
-function onScanPallet() {
-  message.value = ''
-  const p = findPallet(scanCode.value)
-  if (!p) {
-    message.value = '❌ Không tìm thấy Pallet/Box'
-    selected.value = null
-    return
-  }
-  // Nếu pallet đã có vị trí → yêu cầu đổi vị trí (có thể cần quyền)
-  selected.value = p
-  scanCode.value = ''
-}
+const tableShipped = ref([])
+const showChangeModal = ref(false)
+const changeForm = reactive({
+  unit_code: '',
+  new_slot: null
+})
 
-function onClickCell(t, s) {
-  pick.tier = t
-  pick.slot = s
-}
-
-function setRack(r) {
-  pick.rack = r
-}
-
-function confirmLocation() {
-  message.value = ''
-  if (!selected.value) {
-    message.value = '❌ Chưa chọn Pallet/Box'
-    return
-  }
-  const expected = slotLabel(pick.rack, pick.tier, pick.slot)
-  const confirmed = (scanLoc.value || '').trim().toUpperCase()
-  if (!confirmed) {
-    message.value = '❌ Vui lòng scan mã vị trí thực tế (QR Location)'
-    return
-  }
-
-  // So sánh expected vs confirmed
-  if (confirmed !== expected) {
-    // yêu cầu admin override
-    expectedCache.value = expected
-    confirmedCache.value = confirmed
-    showOverride.value = true
-    return
-  }
-
-  // Đúng vị trí → lưu
-  finishPutaway(expected, confirmed, false)
-}
-
-function finishPutaway(expected, confirmed, override) {
-  selected.value.location = confirmed
-  selected.value.wh = 'K1'
-  selected.value.status = 'stored'
-
-  putawayLogs.value.unshift({
-    code: selected.value.code,
-    expected,
-    confirmed,
-    by: 'E00123', // mock
-    time: new Date().toLocaleString(),
-    override,
-  })
-
-  message.value = '✅ Đã xác nhận vị trí: ' + confirmed + (override ? ' (admin override)' : '')
-  scanLoc.value = ''
-  selected.value = null
-}
-
-/* ===== Admin xác nhận khi sai vị trí ===== */
-function doOverride() {
-  // TODO: call API verify admin
-  if (adminPass.value !== 'admin123') {
-    message.value = '❌ Sai mật khẩu quản trị viên'
-    showOverride.value = false
-    adminPass.value = ''
-    overrideReason.value = ''
-    return
-  }
-  // Cho phép confirm khác vị trí dự kiến
-  finishPutaway(expectedCache.value, confirmedCache.value, true)
-  showOverride.value = false
-  adminPass.value = ''
-  overrideReason.value = ''
-}
-
-/* ===== Enter keys ===== */
-function onEnterPallet(e) {
-  e.preventDefault()
-  onScanPallet()
-}
-function onEnterLoc(e) {
-  e.preventDefault()
-  confirmLocation()
+// Mở modal đổi vị trí
+function openChange(row) {
+  changeForm.unit_code = row.unit_code
+  showChangeModal.value = true
 }
 </script>
 
 <template>
-  <CCard>
-    <CCardHeader class="fw-semibold d-flex align-items-center gap-2">
-      Putaway (Scan + Xác nhận vị trí thực tế)
-      <CBadge color="secondary">Kho K1</CBadge>
+  <CCard class="mb-3">
+    <CCardHeader>
+      <CButtonGroup>
+        <CButton :color="mode === 'assign' ? 'primary' : 'secondary'" @click="mode = 'assign'">
+          Nhập vị trí
+        </CButton>
+        <CButton :color="mode === 'scan' ? 'primary' : 'secondary'" @click="mode = 'scan'">
+          Nhập kho
+        </CButton>
+      </CButtonGroup>
     </CCardHeader>
 
     <CCardBody>
-      <CAlert v-if="message" :color="message.startsWith('✅') ? 'success' : 'danger'" class="py-2">
-        {{ message }}
-      </CAlert>
-
-      <CRow class="mb-3">
-        <CCol md="7">
-          <!-- Chọn vị trí dự kiến -->
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <strong>Chọn Rack:</strong>
-            <div class="d-flex gap-2">
-              <CButton
-                v-for="r in racks" :key="r"
-                :color="pick.rack===r ? 'primary' : 'secondary'"
-                variant="outline"
-                size="sm"
-                @click="setRack(r)"
-              >{{ r }}</CButton>
-            </div>
-            <span class="ms-2">Vị trí dự kiến:</span>
-            <CBadge color="primary">{{ slotLabel(pick.rack, pick.tier, pick.slot) }}</CBadge>
-          </div>
-
-          <div class="mini-map">
-            <div v-for="t in tiers" :key="t" class="tier">
-              <div class="tier-label">T{{ t }}</div>
-              <div class="grid" :style="{ gridTemplateColumns: 'repeat(' + slotsPerTier + ', 1fr)' }">
-                <button
-                  v-for="s in slots" :key="'T'+t+'-'+s"
-                  class="cell"
-                  :class="{ active: pick.tier===t && pick.slot===s }"
-                  @click="onClickCell(t, s)"
-                  :title="'T'+t+'-'+s"
-                />
-              </div>
-            </div>
-          </div>
+      <!-- MODE 1: ASSIGN LOCATION -->
+      <div v-if="mode === 'assign'">
+        <CRow>
+          <CCol md="3">
+            <CFormInput v-model="form.unit_code" label="QR parts" />
+          </CCol>
+          <CCol md="3">
+            <CFormInput v-model="form.part_code" label="Part code" />
+          </CCol>
+        </CRow>
+        <CRow>
+          <CCol md="2">
+            <CFormSelect label="Kho" v-model="form.warehouse" />
+          </CCol>
+          <CCol md="2">
+            <CFormSelect label="Giá" v-model="form.rack" />
+          </CCol>
+          <CCol md="2">
+            <CFormSelect label="Tầng" v-model="form.tier" />
+          </CCol>
+          <CCol md="2" class="mt-2">
+            <CFormSelect label="Vị trí" v-model="form.slot" />
+          </CCol>
+        </CRow>
+      </div>
+      <!-- MODE 2: SCAN -->
+      <CRow v-else>
+        <CCol md="4">
+          <CFormInput v-model="form.unit_code" label="QR parts" />
         </CCol>
-
-        <CCol md="5">
-          <!-- Scan Pallet + Scan Location -->
-          <CForm class="d-flex align-items-end gap-2 mb-3" @submit.prevent="onScanPallet">
-            <div class="flex-grow-1">
-              <label class="form-label mb-1">Scan Pallet/Box</label>
-              <CFormInput v-model="scanCode" placeholder="Bắn QR pallet/box..." @keyup.enter="onEnterPallet" />
-            </div>
-            <CButton color="primary" @click="onScanPallet">
-              <CIcon :icon="cilQrCode" class="me-1" /> Scan
-            </CButton>
-          </CForm>
-
-          <div class="p-3 border rounded bg-white mb-3" v-if="selected">
-            <div class="fw-semibold mb-1">{{ selected.code }}</div>
-            <div>Part: <strong>{{ selected.part_no }}</strong></div>
-            <div>Lot: {{ selected.lot_no }}</div>
-            <div>Qty: {{ selected.qty }}</div>
-            <div>Vị trí hiện tại: <em>{{ selected.location || '(chưa có)' }}</em></div>
-
-            <CForm class="d-flex align-items-end gap-2 mt-3" @submit.prevent="confirmLocation">
-              <div class="flex-grow-1">
-                <label class="form-label mb-1">Scan vị trí thực tế (QR Location)</label>
-                <CFormInput v-model="scanLoc" placeholder="Bắn QR vị trí trên kệ..."
-                            @keyup.enter="onEnterLoc" />
-              </div>
-              <CButton color="success" @click="confirmLocation">
-                <CIcon :icon="cilCheckCircle" class="me-1" /> Xác nhận
-              </CButton>
-              <CButton color="secondary" variant="outline" @click="selected=null">
-                <CIcon :icon="cilX" class="me-1" /> Bỏ
-              </CButton>
-            </CForm>
-          </div>
-          <div v-else class="text-body-secondary">(Chưa chọn Pallet/Box)</div>
-
-          <!-- Logs -->
-          <div class="mt-4"><strong>Putaway logs</strong></div>
-          <CTable small hover class="align-middle">
-            <CTableHead>
-              <CTableRow>
-                <CTableHeaderCell>#</CTableHeaderCell>
-                <CTableHeaderCell>Code</CTableHeaderCell>
-                <CTableHeaderCell>Expected</CTableHeaderCell>
-                <CTableHeaderCell>Confirmed</CTableHeaderCell>
-                <CTableHeaderCell>By</CTableHeaderCell>
-                <CTableHeaderCell>Time</CTableHeaderCell>
-                <CTableHeaderCell>OVR</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              <CTableRow v-for="(l,i) in putawayLogs" :key="i">
-                <CTableDataCell>{{ i+1 }}</CTableDataCell>
-                <CTableDataCell>{{ l.code }}</CTableDataCell>
-                <CTableDataCell>{{ l.expected }}</CTableDataCell>
-                <CTableDataCell>{{ l.confirmed }}</CTableDataCell>
-                <CTableDataCell>{{ l.by }}</CTableDataCell>
-                <CTableDataCell>{{ l.time }}</CTableDataCell>
-                <CTableDataCell>
-                  <CBadge :color="l.override ? 'danger' : 'success'">
-                    {{ l.override ? 'YES' : 'NO' }}
-                  </CBadge>
-                </CTableDataCell>
-              </CTableRow>
-              <CTableRow v-if="!putawayLogs.length">
-                <CTableDataCell colspan="7" class="text-center text-body-secondary">Chưa có log</CTableDataCell>
-              </CTableRow>
-            </CTableBody>
-          </CTable>
+        <CCol md="4">
+          <CFormInput v-model="form.location_qr" label="QR vị trí" />
         </CCol>
       </CRow>
+
+      <CButton color="success" class="mt-3" >
+        Xác nhận
+      </CButton>
+    </CCardBody>
+  </CCard>
+  <CCard class="mb-3">
+    <CCardHeader>
+      Storage Units (Available / Allocated)
+    </CCardHeader>
+
+    <CCardBody>
+      <CFormInput v-model="filter1" placeholder="Lọc theo QR / Part" class="mb-2" />
+
+      <CTable hover>
+        <CTableHead>
+          <CTableRow>
+            <CTableHeaderCell>QR</CTableHeaderCell>
+            <CTableHeaderCell>Part</CTableHeaderCell>
+            <CTableHeaderCell>Số lượng</CTableHeaderCell>
+            <CTableHeaderCell>Income</CTableHeaderCell>
+            <CTableHeaderCell>Trạng thái</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+
+        <CTableBody>
+          <CTableRow v-for="row in tableAvailable" :key="row.id" style="cursor:pointer" @click="selectRow(row)">
+            <CTableDataCell>{{ row.unit_code }}</CTableDataCell>
+            <CTableDataCell>{{ row.part_name }}</CTableDataCell>
+            <CTableDataCell>{{ row.qty }}</CTableDataCell>
+            <CTableDataCell>{{ row.income_id }}</CTableDataCell>
+            <CTableDataCell>
+              <CBadge :color="row.status === 'available' ? 'warning' : 'info'">
+                {{ row.status }}
+              </CBadge>
+            </CTableDataCell>
+          </CTableRow>
+        </CTableBody>
+      </CTable>
     </CCardBody>
   </CCard>
 
-  <!-- Modal: Admin override khi sai vị trí -->
-  <CModal alignment="center" :visible="showOverride" @close="() => showOverride=false">
-    <CModalHeader>
-      <CModalTitle>
-        <CIcon :icon="cilShieldAlt" class="me-2" /> Xác nhận quản trị viên
-      </CModalTitle>
-    </CModalHeader>
+  <CCard>
+    <CCardHeader>Storage Units (Shipped)</CCardHeader>
+
+    <CCardBody>
+      <CTable hover>
+        <CTableHead>
+          <CTableRow>
+            <CTableHeaderCell>QR</CTableHeaderCell>
+            <CTableHeaderCell>Part</CTableHeaderCell>
+            <CTableHeaderCell>Số lượng</CTableHeaderCell>
+            <CTableHeaderCell>Vị trí</CTableHeaderCell>
+            <CTableHeaderCell></CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+
+        <CTableBody>
+          <CTableRow v-for="row in tableShipped" :key="row.id">
+            <CTableDataCell>{{ row.unit_code }}</CTableDataCell>
+            <CTableDataCell>{{ row.part_name }}</CTableDataCell>
+            <CTableDataCell>{{ row.qty }}</CTableDataCell>
+            <CTableDataCell>{{ row.slot_code }}</CTableDataCell>
+            <CTableDataCell>
+              <CButton size="sm" @click="openChange(row)">
+                Đổi vị trí
+              </CButton>
+            </CTableDataCell>
+          </CTableRow>
+        </CTableBody>
+      </CTable>
+    </CCardBody>
+  </CCard>
+  <CModal :visible="showChangeModal">
+    <CModalHeader>Đổi vị trí</CModalHeader>
+
     <CModalBody>
-      <div class="mb-2">Vị trí dự kiến: <strong>{{ expectedCache }}</strong></div>
-      <div class="mb-3">Vị trí quét thực tế: <strong class="text-danger">{{ confirmedCache }}</strong></div>
-      <label class="form-label">Mật khẩu Admin</label>
-      <CFormInput v-model="adminPass" type="password" class="mb-3" placeholder="Nhập mật khẩu quản trị viên" />
-      <label class="form-label">Lý do (optional)</label>
-      <CFormInput v-model="overrideReason" placeholder="Ghi lý do override..." />
+      <CFormInput v-model="changeForm.unit_code" disabled />
+      <CFormSelect v-model="changeForm.new_slot" label="Vị trí mới" />
     </CModalBody>
+
     <CModalFooter>
-      <CButton color="secondary" @click="() => { showOverride=false }">Huỷ</CButton>
-      <CButton color="danger" @click="doOverride">Xác nhận override</CButton>
+      <CButton color="secondary" @click="showChangeModal = false">Huỷ</CButton>
+      <CButton color="primary">Xác nhận</CButton>
     </CModalFooter>
   </CModal>
 </template>
 
-<style scoped>
-.mini-map { border:2px solid #cbd5e1; border-radius:8px; padding:8px; background:#f8fafc; }
-.tier { display:grid; grid-template-columns: 48px 1fr; align-items:center; gap:8px; border-bottom:2px solid #e5e7eb; padding:6px 0; }
-.tier:last-child{ border-bottom:none; }
-.tier-label { font-weight:600; color:#64748b; }
-.grid { display:grid; gap:4px; }
-.cell { height:18px; border:1px solid #e5e7eb; border-radius:3px; background:#fff; cursor:pointer; }
-.cell:hover{ outline:2px solid #94a3b8; }
-.cell.active{ background:#22c55e; border-color:#16a34a; }
-</style>
+
+<style scoped></style>
