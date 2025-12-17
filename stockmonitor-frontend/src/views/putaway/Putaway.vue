@@ -71,17 +71,17 @@ function openChange(row) {
           <CCol md="2">
             <CFormSelect label="Tầng" v-model="form.tier" />
           </CCol>
-          <CCol md="2" class="mt-2">
+          <CCol md="2">
             <CFormSelect label="Vị trí" v-model="form.slot" />
           </CCol>
         </CRow>
       </div>
       <!-- MODE 2: SCAN -->
       <CRow v-else>
-        <CCol md="4">
+        <CCol md="3">
           <CFormInput v-model="form.unit_code" label="QR parts" />
         </CCol>
-        <CCol md="4">
+        <CCol md="3">
           <CFormInput v-model="form.location_qr" label="QR vị trí" />
         </CCol>
       </CRow>
@@ -92,14 +92,14 @@ function openChange(row) {
     </CCardBody>
   </CCard>
   <CCard class="mb-3">
-    <CCardHeader>
+    <CCardHeader class="fw-semibold bg-secondary text-white">
       Storage Units (Available / Allocated)
     </CCardHeader>
 
     <CCardBody>
       <CFormInput v-model="filter1" placeholder="Lọc theo QR / Part" class="mb-2" />
 
-      <CTable hover>
+      <CTable hover small striped class="align-middle">
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>QR</CTableHeaderCell>
@@ -122,16 +122,22 @@ function openChange(row) {
               </CBadge>
             </CTableDataCell>
           </CTableRow>
+          <CTableRow v-if="!tableAvailable.length">
+            <CTableDataCell colspan="6" class="text-center text-body-secondary py-4">
+              Không có dữ liệu
+            </CTableDataCell>
+          </CTableRow>
         </CTableBody>
       </CTable>
     </CCardBody>
   </CCard>
 
   <CCard>
-    <CCardHeader>Storage Units (Shipped)</CCardHeader>
-
+    <CCardHeader class="fw-semibold bg-secondary text-white">
+      Storage Units (Shipped)
+    </CCardHeader>
     <CCardBody>
-      <CTable hover>
+      <CTable small striped hover class="align-middle">
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>QR</CTableHeaderCell>
@@ -152,6 +158,11 @@ function openChange(row) {
               <CButton size="sm" @click="openChange(row)">
                 Đổi vị trí
               </CButton>
+            </CTableDataCell>
+          </CTableRow>
+          <CTableRow v-if="!tableAvailable.length">
+            <CTableDataCell colspan="6" class="text-center text-body-secondary py-4">
+              Không có dữ liệu
             </CTableDataCell>
           </CTableRow>
         </CTableBody>

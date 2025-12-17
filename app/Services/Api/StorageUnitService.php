@@ -107,52 +107,52 @@ class StorageUnitService implements StorageUnitServiceInterface
     // }
 
 
-public function store($request)
-{
-    return DB::transaction(function () use ($request) {
+    public function store($request)
+    {
+        return DB::transaction(function () use ($request) {
 
-        $income = $this->incomeRepo->find($request['incomeId']);
-        if (!$income) abort(404, 'Income không tồn tại');
+            $income = $this->incomeRepo->find($request['incomeId']);
+            if (!$income) abort(404, 'Income không tồn tại');
 
-        foreach ($request['labels'] as $lab) {
+            foreach ($request['labels'] as $lab) {
 
-            $line = $this->incomeLineRepo->find($lab['lineNo']);
-            if (!$line || $line->income_id !== $income->id) {
-                abort(422, 'Income line không hợp lệ');
+                $line = $this->incomeLineRepo->find($lab['lineNo']);
+                if (!$line || $line->income_id !== $income->id) {
+                    abort(422, 'Income line không hợp lệ');
+                }
+
+                $sequence = intval(substr($lab['code'], -3));
+
+                // chặn vượt qty
+                $usedQty = $this -> repo -> where('income_line_id', $line->id)->sum('qty');
+                if ($usedQty + $lab['qty'] > $line->qty_total) {
+                    abort(422, 'Vượt số lượng nhập');
+                }
+
+                // chặn trùng sequence
+                $exists = $this -> repo -> where([
+                    'income_line_id' => $line->id,
+                    'unit_type' => strtolower($lab['type']),
+                    'sequence' => $sequence
+                ])->exists();
+
+                if ($exists) abort(422, 'Trùng mã QR');
+
+                $this -> repo -> create([
+                    'unit_type' => strtolower($lab['type']),
+                    'unit_code' => $lab['code'],
+                    'sequence' => $sequence,
+                    'income_line_id' => $line->id,
+                    'part_id' => $line->part_id,
+                    'lot_no' => $lab['lot_no'],
+                    'expiry_date' => $lab['expiry'],
+                    'qty' => $lab['qty'],
+                ]);
             }
 
-            $sequence = intval(substr($lab['code'], -3));
-
-            // chặn vượt qty
-            $usedQty = $this -> repo -> where('income_line_id', $line->id)->sum('qty');
-            if ($usedQty + $lab['qty'] > $line->qty_total) {
-                abort(422, 'Vượt số lượng nhập');
-            }
-
-            // chặn trùng sequence
-            $exists = $this -> repo -> where([
-                'income_line_id' => $line->id,
-                'unit_type' => strtolower($lab['type']),
-                'sequence' => $sequence
-            ])->exists();
-
-            if ($exists) abort(422, 'Trùng mã QR');
-
-            $this -> repo -> create([
-                'unit_type' => strtolower($lab['type']),
-                'unit_code' => $lab['code'],
-                'sequence' => $sequence,
-                'income_line_id' => $line->id,
-                'part_id' => $line->part_id,
-                'lot_no' => $lab['lot_no'],
-                'expiry_date' => $lab['expiry'],
-                'qty' => $lab['qty'],
-            ]);
-        }
-
-        return true;
-    });
-}
+            return true;
+        });
+    }
 
     function getLatestCode($incomeId) {
 
@@ -272,6 +272,27 @@ public function store($request)
 
             return $unit;
         });
+    }
+
+    // Get Unit by Status
+    public function getAllByStatus($request) {
+        $units = $this->repo->paginateByFilters(
+            [
+                'search' => @$request['search'],
+                'status' => @$request['status'],
+                'status_in' => @$request['part_id'],
+                'warehouse_id' => @$request['warehouse_id'],
+            ],
+            config('constants.pagination'),
+            [
+                'part:id,part_no',
+                'income_lines:id,income_id',
+            ],
+            [],
+            []
+        );
+
+        return $units;
     }
   
 }

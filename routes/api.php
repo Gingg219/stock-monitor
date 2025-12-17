@@ -42,11 +42,13 @@ Route::middleware('api')->group(function () {
             Route::post('/incomes', [IncomeController::class, 'store']);
 
             //StorageUnit
-            Route::post('/storage-unit', [StorageUnitController::class, 'store']);
+            Route::post('/storage-unit', [StorageUnitController::class,'getAllByStatus']);
+            Route::post('/storage-unit/store', [StorageUnitController::class, 'store']);
             Route::get('/storage-unit/{income_line_id}', [StorageUnitController::class, 'getLatestCode']);
             Route::post('/storage-unit/assign', [StorageUnitController::class,'assign']);
             Route::post('/storage-unit/scan', [StorageUnitController::class,'scan']);
             Route::post('/storage-unit/change-location', [StorageUnitController::class,'changeLocation']);
+            Route::post('/storage-unit/scan', [StorageUnitController::class,'scan']);
 
         });
         

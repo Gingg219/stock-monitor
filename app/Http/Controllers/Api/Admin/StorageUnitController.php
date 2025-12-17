@@ -97,4 +97,15 @@ class StorageUnitController extends Controller
         );
     }
 
+    /** Change location */
+    public function getAllByStatus(Request $request)
+    {
+        $data = $request->all();
+        $units = $this->storageUnitService->getAllByStatus($data);
+
+        return response()->json([
+            'success' => true,
+            'data' => $units,
+        ]);
+    }
 }
