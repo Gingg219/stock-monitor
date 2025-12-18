@@ -10,5 +10,6 @@ export async function me() {
 }
 
 export async function logout() {
-  return api.post('/logout');
+  await api.post('/logout')
+  window.location.replace('/#/pages/login')
 }

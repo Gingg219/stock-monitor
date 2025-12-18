@@ -379,7 +379,7 @@ async function onSaveQr(payload) {
     <CCardHeader class="fw-semibold">Tạo chứng từ nhập (Income)</CCardHeader>
     <CCardBody>
       <!-- Chọn kho -->
-      <div class="w-50 mb-3">
+      <div class="w-50 mb-3" hidden>
         <select
           v-model="form.warehouse_id"
           class="form-select w-25 text-bg-secondary"

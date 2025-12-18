@@ -13,6 +13,7 @@ use Prettus\Repository\Traits\TransformableTrait;
  */
 class StorageUnits extends Model implements Transformable
 {
+    protected $appends = ['location_code'];
     use TransformableTrait;
 
     /**
@@ -62,5 +63,26 @@ class StorageUnits extends Model implements Transformable
     public function income_lines()
     {
         return $this->belongsTo(IncomeLines::class, 'income_line_id');
+    }
+
+    public function getLocationCodeAttribute()
+    {
+        $slot = $this->slot;
+
+        if (
+            !$slot ||
+            !$slot->tier ||
+            !$slot->tier->rack ||
+            !$slot->tier->rack->warehouse
+        ) {
+            return null;
+        }
+
+        return implode('-', [
+            $slot->tier->rack->warehouse->code, // K1
+            $slot->tier->rack->code,            // A
+            $slot->tier->level_no,                 // 3
+            $slot->code,                        // 1
+        ]);
     }
 }

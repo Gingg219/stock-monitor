@@ -68,13 +68,4 @@ class StorageUnitsRepositoryEloquent extends BaseRepository implements StorageUn
         }
             return $model;
     }
-
-    /**
-     * Boot up the repository, pushing criteria
-     */
-    public function boot()
-    {
-        $this->pushCriteria(app(RequestCriteria::class));
-    }
-    
 }

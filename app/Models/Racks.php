@@ -29,4 +29,9 @@ class Racks extends Model implements Transformable
     {
         return $this->hasMany(Tiers::class, 'rack_id');
     }
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouses::class, 'warehouse_id');
+    }
 }

@@ -10,17 +10,17 @@ export function fetchLatestCode(income_id: number | string) {
 }
 
 export function assignLoc(payload: any) {
-  return api.get(`/api/admin/storage-unit/assign/`, payload)
+  return api.post(`/api/admin/storage-unit/assign/`, payload)
 }
 
 export function changeLoc(payload: any) {
-  return api.get(`/api/admin/storage-unit/change-location/`, payload)
+  return api.post(`/api/admin/storage-unit/change-location/`, payload)
 }
 
 export function scanPutAway(payload: any) {
-  return api.get(`/api/admin/storage-unit/scan/`, payload)
+  return api.post(`/api/admin/storage-unit/scan/`, payload)
 }
 
 export function getAll(payload: any) {
-  return api.get(`/api/admin/storage-unit/`, payload)
+  return api.post(`/api/admin/storage-unit/`, payload)
 }

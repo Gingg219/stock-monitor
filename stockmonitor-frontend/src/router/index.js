@@ -3,57 +3,34 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 import DefaultLayout from '@/layouts/DefaultLayout'
 
+import { useAuthStore } from '@/stores/auth'
+
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: DefaultLayout,
     redirect: '/dashboard',
+    meta: { requiresAuth: true }, 
     children: [
       {
         path: '/dashboard',
-        name: 'Dashboard',
-        // route level code-splitting
-        // this generates a separate chunk (about.[hash].js) for this route
-        // which is lazy-loaded when the route is visited.
-        component: () =>
-          import(
-            /* webpackChunkName: "dashboard" */ '@/views/dashboard/Dashboard.vue'
-          ),
+        name: 'Map',
+        component: () => import('@/components/warehouse-map/WarehouseMap.vue'),
       },
-
       // ===== OPERATION =====
       {
         path: '/inbounds/create',
-        name: 'Inbound create',
+        name: 'Nhận hàng',
         component: () => import('@/views/inbound/IncomeCreate.vue'),
       },
-      { path: '/map', name: 'Map', component: () => import('@/components/warehouse-map/WarehouseMap.vue') },
-
-      // Inbound (list + detail with tabs)
-      { path: '/inbounds', name: 'Inbound List', component: () => import('@/views/inbound/InboundList.vue') },
-      {
-        path: '/inbounds/:id',
-        name: 'Inbound Detail',
-        component: () => import('@/views/inbound/InboundDetail.vue'),
-        props: true,
-        children: [
-          { path: '', redirect: { name: 'Inbound Lines' } },
-          { path: 'lines',   name: 'Inbound Lines',   component: () => import('@/views/inbound/tabs/InboundLinesTab.vue') },
-          { path: 'qr',      name: 'Inbound QR',      component: () => import('@/views/inbound/tabs/InboundQrTab.vue') },
-          { path: 'history', name: 'Inbound History', component: () => import('@/views/inbound/tabs/InboundHistoryTab.vue') },
-        ],
-      },
-
-      { path: '/putaway',  name: 'Put away', component: () => import('@/views/putaway/Putaway.vue') },
-      { path: '/transfer', name: 'Transfer', component: () => import('@/views/transfer/TransferK1K2.vue') },
+      { path: '/putaway',  name: 'Nhập kho', component: () => import('@/views/putaway/Putaway.vue') },
+      { path: '/transfer', name: 'Xuất kho', component: () => import('@/views/transfer/TransferK1K2.vue') },
 
       // ===== ADMIN =====
       { path: '/admin/layouts', name: 'Layouts', component: () => import('@/views/config_layouts/ConfigLayout.vue') },
 
-
-
-
+      // ===== BUTTONS (EXAMPLE) =====
       // {
       //   path: '/buttons',
       //   name: 'Buttons',
@@ -104,14 +81,16 @@ const routes = [
         component: () => import('@/views/pages/Page500'),
       },
       {
-        path: 'login',
+        path: '/pages/login',
         name: 'Login',
         component: () => import('@/views/pages/Login'),
+        meta: { guest: true },
       },
       {
-        path: 'register',
+        path: '/pages/register',
         name: 'Register',
         component: () => import('@/views/pages/Register'),
+        meta: { guest: true },
       },
     ],
   },
@@ -125,5 +104,29 @@ const router = createRouter({
     return { top: 0 }
   },
 })
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+
+  // Chỉ fetch user khi route cần auth
+  if (to.meta.requiresAuth && !auth.user) {
+    try {
+      await auth.fetchUser()
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Chưa login mà vào private
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return '/pages/login'
+  }
+
+  // Đã login mà vẫn vào login
+  if (to.meta.guest && auth.isAuthenticated) {
+    return '/'
+  }
+})
+
 
 export default router

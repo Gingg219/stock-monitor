@@ -29,4 +29,9 @@ class Tiers extends Model implements Transformable
     {
         return $this->hasMany(Slots::class, 'tier_id');
     }
+
+    public function rack()
+    {
+        return $this->belongsTo(Racks::class, 'rack_id');
+    }
 }

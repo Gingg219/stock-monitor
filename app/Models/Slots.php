@@ -58,4 +58,9 @@ class Slots extends Model implements Transformable
             ->selectRaw('current_slot_id, part_id, SUM(qty) as qty')
             ->groupBy('current_slot_id', 'part_id');
     }
+
+    public function tier()
+    {
+        return $this->belongsTo(Tiers::class, 'tier_id');
+    }
 }

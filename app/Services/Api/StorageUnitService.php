@@ -276,20 +276,24 @@ class StorageUnitService implements StorageUnitServiceInterface
 
     // Get Unit by Status
     public function getAllByStatus($request) {
+        $length = collect($request)->count();
         $units = $this->repo->paginateByFilters(
             [
                 'search' => @$request['search'],
                 'status' => @$request['status'],
-                'status_in' => @$request['part_id'],
+                'status_in' => @$request['status_in'],
                 'warehouse_id' => @$request['warehouse_id'],
             ],
-            config('constants.pagination'),
+            999999,
             [
                 'part:id,part_no',
                 'income_lines:id,income_id',
+                'slot.tier.rack.warehouse:id,code',
+                'slot:id,code,tier_id',
+                'slot.tier:id,level_no,rack_id',
+                'slot.tier.rack:id,code,warehouse_id',
             ],
-            [],
-            []
+            ['status' => 'desc']
         );
 
         return $units;

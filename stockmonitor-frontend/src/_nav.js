@@ -1,16 +1,7 @@
 import {  cilTransfer, cilQrCode, cilStorage } from '@coreui/icons'
 import { CNavItem } from '@coreui/vue'
 export default [
-  {
-    component: 'CNavItem',
-    name: 'Dashboard',
-    to: '/dashboard',
-    icon: 'cil-speedometer',
-    badge: {
-      color: 'primary',
-      text: 'NEW',
-    },
-  },
+  
   // Client
   {
     component: 'CNavTitle',
@@ -19,30 +10,26 @@ export default [
   {
     component: 'CNavItem',
     name: 'Map',
-    to: '/map',
+    to: '/dashboard',
     icon: 'cilStorage',
+    badge: {
+    },
   },
   {
     component: 'CNavItem',
-    name: 'Inbound',
-    to: '/inbounds',
-    icon: 'cilArrowCircleBottom',
-  },
-  {
-    component: 'CNavItem',
-    name: 'Inbound create',
+    name: 'Nhận hàng',
     to: '/inbounds/create',
     icon: 'cilArrowCircleBottom',
   },
   {
     component: 'CNavItem',
-    name: 'Put away',
+    name: 'Nhập kho',
     to: '/putaway',
     icon: 'cil-pencil',
   },
   {
     component: 'CNavItem',
-    name: 'Transfer',
+    name: 'Xuất kho',
     to: '/transfer',
     icon: 'cilTransfer',
   },
