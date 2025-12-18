@@ -21,12 +21,7 @@ const sidebar = useSidebarStore()
     <CSidebarHeader class="border-bottom">
       <RouterLink custom to="/" v-slot="{ href, navigate }">
         <CSidebarBrand v-bind="$attrs" as="a" :href="href" @click="navigate">
-          <CIcon custom-class-name="sidebar-brand-full" :icon="logo" :height="32" />
-          <CIcon custom-class-name="sidebar-brand-narrow" :icon="sygnet" :height="32" />
-          <div  class="wrapper d-flex flex-column"
-          :class="{ 'sidebar-hidden': !sidebar.visible }">
             <h3>Stock Monitor</h3>
-          </div>
         </CSidebarBrand>
       </RouterLink>
       <CCloseButton class="d-lg-none" dark @click="sidebar.toggleVisible()" />
@@ -37,13 +32,3 @@ const sidebar = useSidebarStore()
     </CSidebarFooter>
   </CSidebar>
 </template>
-<style scoped>
-  .wrapper.sidebar-hidden {
-  padding-left: 0 !important;
-}
-.wrapper {
-  padding-left: var(--cui-sidebar-occupy-start, 0);
-  transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-</style>
