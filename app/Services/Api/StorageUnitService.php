@@ -198,7 +198,7 @@ class StorageUnitService implements StorageUnitServiceInterface
                 [
                 'unit_code' => $data['unit_code']
                 ],
-                ['part','slot','income_line']
+                ['part','slot','income_lines']
             );
             if (!$unit) abort(404, 'Unit không tồn tại');
 
@@ -226,7 +226,7 @@ class StorageUnitService implements StorageUnitServiceInterface
                 [
                 'unit_code' => $data['unit_code']
                 ],
-                ['part','slot','income_line']
+                ['part','slot','income_lines']
             );
             if (!$unit) abort(404, 'Unit không tồn tại');
 
@@ -257,7 +257,7 @@ class StorageUnitService implements StorageUnitServiceInterface
                 [
                 'unit_code' => $data['unit_code']
                 ],
-                ['part','slot','income_line']
+                ['part','slot','income_lines']
             );
             if (!$unit || $unit->status !== 'shipped') {
                 abort(422, 'Unit không hợp lệ');
@@ -288,6 +288,7 @@ class StorageUnitService implements StorageUnitServiceInterface
             [
                 'part:id,part_no',
                 'income_lines:id,income_id',
+                'income_lines.income',
                 'slot.tier.rack.warehouse:id,code',
                 'slot:id,code,tier_id',
                 'slot.tier:id,level_no,rack_id',

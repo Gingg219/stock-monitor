@@ -7,6 +7,7 @@ use App\Repositories\Contracts\SlotsRepository;
 use App\Repositories\Contracts\TiersRepository;
 use App\Repositories\Contracts\WarehousesRepository;
 use App\Http\Controllers\Controller;
+use App\Services\Contracts\LocationServiceInterface;
 use App\Services\Contracts\WarehouseServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,15 @@ use Illuminate\Http\Request;
 class LocationController extends Controller
 {
     protected $WarehouseService;
+    protected $service;
 
     public function __construct(
-        WarehouseServiceInterface $WarehouseService
+        WarehouseServiceInterface $WarehouseService,
+        LocationServiceInterface $service
     ) 
     {
         $this->WarehouseService = $WarehouseService;
+        $this->service = $service;
         $this->authorize('is-operator');
     }
 
@@ -30,38 +34,24 @@ class LocationController extends Controller
         return response()->json($warehouses);
     }
 
-    // public function store($request)
-    // {
-    //     $slots = $this->warehouseRepo->store($request);
-    //     if (!$slots) {
-    //         return response()->json(['status' => '400', 'message' => 'Thêm mới thất bại!']);
-    //     } else {
-    //         // return response()->json(['status' => '200', 'message' => 'Thêm mới thành công!']);
-    //     }
-    //     $data = $request->toArray();
+    public function warehouses(Request $request)
+    {
+        return response()->json($this->service->warehouses($request));
+    }
 
-    //     return response()->json([
-    //         'status' => '200',
-    //         'message' => 'Thêm mới thành công!',
-    //         'data' => $data // Thêm dữ liệu vào phản hồi
-    //     ], 200);
-    // }
+    public function racks(Request $request)
+    {
+        return response()->json($this->service->racks($request));
+    }
 
-    // public function update($id,$request)
-    // {
-    //     $slots = $this->warehouseRepo->updateWithRelations($id,$request);
-    //     if (!$slots) return response()->json(['status' => '400', 'message' => 'Thêm mới thất bại!']);
+    public function tiers(Request $request)
+    {
+        return response()->json($this->service->tiers($request));
+    }
 
-    //     return response()->json([
-    //         'status' => '200',
-    //         'message' => 'Thêm mới thành công!',
-    //         'data' => $slots // Thêm dữ liệu vào phản hồi
-    //     ], 200);
-    // }
+    public function slots(Request $request)
+    {
+        return response()->json($this->service->slots($request));
+    }
 
-    // public function destroy()
-    // {
-    //     $warehouses = $this->warehouseRepo->getWarehouseTree();
-    //     return response()->json($warehouses);
-    // }
 }

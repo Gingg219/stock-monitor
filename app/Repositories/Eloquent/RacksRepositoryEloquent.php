@@ -6,6 +6,7 @@ use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\RacksRepository;
 use App\Models\Racks;
+use App\Repositories\Traits\RepositoryTraits;
 use App\Validators\RacksValidator;
 
 /**
@@ -15,6 +16,7 @@ use App\Validators\RacksValidator;
  */
 class RacksRepositoryEloquent extends BaseRepository implements RacksRepository
 {
+    use RepositoryTraits;
     /**
      * Specify Model class name
      *
@@ -26,13 +28,17 @@ class RacksRepositoryEloquent extends BaseRepository implements RacksRepository
     }
 
     
-
-    /**
-     * Boot up the repository, pushing criteria
-     */
-    public function boot()
+ function buildQuery($model, $filters)
     {
-        $this->pushCriteria(app(RequestCriteria::class));
+        if ($this->isValidKey($filters, 'warehouse_id')) {
+            $model->where('warehouse_id', $filters['warehouse_id']);
+        }
+
+        if ($this->isValidKey($filters, 'search')) {
+            $model->where('code', 'like', "%{$filters['search']}%");
+        }
+
+        return $model;
     }
     
 }

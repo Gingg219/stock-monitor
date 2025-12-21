@@ -6,6 +6,7 @@ use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
 use App\Repositories\Contracts\TiersRepository;
 use App\Models\Tiers;
+use App\Repositories\Traits\RepositoryTraits;
 use App\Validators\TiersValidator;
 
 /**
@@ -15,6 +16,7 @@ use App\Validators\TiersValidator;
  */
 class TiersRepositoryEloquent extends BaseRepository implements TiersRepository
 {
+    use RepositoryTraits;
     /**
      * Specify Model class name
      *
@@ -25,14 +27,21 @@ class TiersRepositoryEloquent extends BaseRepository implements TiersRepository
         return Tiers::class;
     }
 
-    
-
     /**
      * Boot up the repository, pushing criteria
      */
-    public function boot()
+
+    public function buildQuery($model, $filters)
     {
-        $this->pushCriteria(app(RequestCriteria::class));
+        if ($this->isValidKey($filters, 'rack_id')) {
+            $model->where('rack_id', $filters['rack_id']);
+        }
+
+        if ($this->isValidKey($filters, 'search')) {
+            $model->where('level_no', 'like', "%{$filters['search']}%");
+        }
+
+        return $model;
     }
     
 }

@@ -44,10 +44,7 @@ class WarehousesRepositoryEloquent extends BaseRepository implements WarehousesR
         }
 
         if ($this->isValidKey($filters, 'search')) {
-            $model = $model->where(function ($query) use ($filters) {
-                $query->orWhere('category_cd', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('name', 'like', '%' . $filters['search'] . '%');
-            });
+            $model->where('code', 'like', "%{$filters['search']}%");
         }
 
         return $model;

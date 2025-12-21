@@ -11,5 +11,5 @@ use Prettus\Repository\Contracts\RepositoryInterface;
  */
 interface WarehousesRepository extends RepositoryInterface
 {
-    public function model();
+
 }

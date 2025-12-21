@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Services\Api\IncomeService;
+use App\Services\Api\LocationService;
 use App\Services\Api\StorageUnitService;
 use App\Services\Api\WarehouseService;
 use App\Services\Contracts\IncomeServiceInterface;
+use App\Services\Contracts\LocationServiceInterface;
 use App\Services\Contracts\StorageUnitServiceInterface;
 use App\Services\Contracts\WarehouseServiceInterface;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +18,7 @@ class ServiceServiceProvider extends ServiceProvider
         WarehouseServiceInterface::class => WarehouseService::class,
         IncomeServiceInterface::class => IncomeService::class,
         StorageUnitServiceInterface::class => StorageUnitService::class,
+        LocationServiceInterface::class => LocationService::class,
         // \App\Services\Contracts\WarehouseServiceInterface::class => \App\Services\Contracts\WarehouseServiceInterface::class,
     ];
     /**

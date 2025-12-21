@@ -27,17 +27,20 @@ class SlotsRepositoryEloquent extends BaseRepository implements SlotsRepository
         return Slots::class;
     }
 
-    public function buildQuery($model, $filters)
-    {
-        return $model;
-    }
-
     /**
      * Boot up the repository, pushing criteria
      */
-    public function boot()
+    public function buildQuery($model, $filters)
     {
-        $this->pushCriteria(app(RequestCriteria::class));
+        if ($this->isValidKey($filters, 'tier_id')) {
+            $model->where('tier_id', $filters['tier_id']);
+        }
+
+        if ($this->isValidKey($filters, 'search')) {
+            $model->where('code', 'like', "%{$filters['search']}%");
+        }
+
+        return $model;
     }
     
 }
