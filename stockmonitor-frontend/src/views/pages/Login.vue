@@ -18,7 +18,7 @@ const handleLogin = async () => {
     // const user = await me()
     window.location.href = '/'
   } catch (err) {
-    error.value = 'Đăng nhập thất bại'
+    toast.error(err.response.data.message,'Đăng nhập thất bại' )
   }
   finally {
     localStorage.setItem('is_logged_in', '1')

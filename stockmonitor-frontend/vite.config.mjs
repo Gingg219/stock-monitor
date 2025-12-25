@@ -32,8 +32,12 @@ export default defineConfig(() => {
       ],
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue', '.scss'],
     },
+    build: {
+      sourcemap: true,
+    },
     server: {
       port: 5173,
+      sourcemap: true,
       proxy: {
         // https://vitejs.dev/config/server-options.html
       },

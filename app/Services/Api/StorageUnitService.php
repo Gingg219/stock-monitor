@@ -224,17 +224,29 @@ class StorageUnitService implements StorageUnitServiceInterface
 
             $unit = $this->repo->firstByFilters(
                 [
-                'unit_code' => $data['unit_code']
+                'unit_code' => $data['unit_code'],
                 ],
                 ['part','slot','income_lines']
             );
-            if (!$unit) abort(404, 'Unit không tồn tại');
+            // return $unit;
+
+            if (!$unit) abort(404, 'QR part không tồn tại');
+            if ($unit->status != 'allocated' ) abort(404, 'Part chưa sẵn sàng để nhập kho');
+
+            if ($unit->location_code != $data['location_qr'] ) abort(404, 'QR vị trí không hợp lệ');
+
+
+            // $query = $this->slotRepo
+            //   ->where('code', $data['location_qr'])
+            //   ->toRawSql();
+
+            // return $query;
 
             $slot = $this->slotRepo
-                ->where('code', $data['location_qr'])
+                ->where('code', $unit->current_slot_id )
                 ->first();
 
-            if (!$slot) abort(422, 'QR vị trí không hợp lệ');
+            // if (!$slot) abort(422, 'QR vị trí không hợp lệ');
 
             $unit->update([
                 'warehouse_id'    => $slot->warehouse_id,

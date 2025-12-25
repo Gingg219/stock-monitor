@@ -100,18 +100,27 @@ watch(() => form.tier, () => {
   ACTIONS
 ====================== */
 async function submit() {
-  if (mode.value === 'assign') {
-    await assignLoc({
-      unit_code: form.unit_code,
-      slot_id: form.slot
-    })
-  } else {
-    await scanPutAway({
-      unit_code: form.unit_code,
-      location_qr: form.location_qr
-    })
+  try {
+    
+    if (mode.value === 'assign') {
+      await assignLoc({
+        unit_code: form.unit_code,
+        slot_id: form.slot
+      })
+    } else {
+      await scanPutAway({
+        unit_code: form.unit_code,
+        location_qr: form.location_qr
+      })
+    }
+    
+    toast.success(`Thêm vị trí thành công`, '')
+    
+  } catch (error) {
+    toast.error(error.response.data.message)
   }
-  toast.success(`Thêm vị trí thành công`, '')
+  clearForm()
+  focus('qr-part-id')
   await loadData()
 }
 
@@ -125,41 +134,43 @@ async function selectRow(row) {
   form.part_code = row.part.part_no
   form.qty = Math.floor(row.qty)
 
-  console.log('CLICK ROW ID:', row.id)
-
   selectedRowId.value = row.id
-
-  console.log('SELECTED:', selectedRowId.value)
   
   scrollToForm()
 
   // Nếu đã có vị trí → fill cascade
   if (row.slot) {
-    const slot = row.slot
-    const tier = slot.tier
-    const rack = tier.rack
-    const warehouse = rack.warehouse
-
-    form.warehouse = warehouse.id
-    await loadRacks()
-
-    form.rack = rack.id
-    await loadTiers()
-
-    form.tier = tier.id
-    await loadSlots()
-
-    form.slot = slot.id
+    getSlotDetail(row.slot)
   }
 
   // scroll + highlight (bên dưới)
   highlightRow(row.id)
 }
 
+//Lấy vị trí chi tiết
+async function getSlotDetail(slot){
+  // const slot = row.slot
+  const tier = slot.tier
+  const rack = tier.rack
+  const warehouse = rack.warehouse
+
+  form.warehouse = warehouse.id
+  await loadRacks()
+
+  form.rack = rack.id
+  await loadTiers()
+
+  form.tier = tier.id
+  await loadSlots()
+
+  form.slot = slot.id
+}
+
 const formRef = ref(null)
 
 
 function clearForm() {
+  form.location_qr = '',
   form.unit_code = '',
   form.part_code = '',
   form.warehouse = null
@@ -212,51 +223,12 @@ const locationQrRef = ref()
 const warehouseSelectRef = ref(null)
 const unitInputRef = ref(null)
 
-// async function focusUnitInput() {
-//     // Luôn chờ nextTick để đảm bảo component đã render và ref đã được gán giá trị
-//     await nextTick();
-
-//     if (!unitInputRef.value) {
-//         // Debug: Nếu vẫn null, có nghĩa là có lỗi trong cú pháp gán ref hoặc component chưa tồn tại
-//         console.error("Focus failed: unitInputRef.value is null.");
-//         return;
-//     }
-
-//     const componentInstance = unitInputRef.value; 
-
-//     // 1. THỬ CÁCH CHUẨN: Gọi phương thức focus() tích hợp (nếu có)
-//     if (typeof componentInstance.focus === 'function') {
-//         componentInstance.focus();
-//         return;
-//     }
-
-//     // 2. THỬ TRUY CẬP DOM NATIVE (dùng $el, nếu thư viện vẫn hỗ trợ)
-//     // $el là DOM Element gốc của component wrapper.
-//     // Nếu nó tồn tại, ta dùng querySelector để tìm thẻ <input> bên trong.
-//     if (componentInstance.$el && typeof componentInstance.$el.querySelector === 'function') {
-//         const inputElement = componentInstance.$el.querySelector('input');
-        
-//         if (inputElement) {
-//             inputElement.focus();
-//             return;
-//         }
-//     }
-    
-//     // Nếu không có cách nào hoạt động, in ra đối tượng để tìm kiếm thủ công
-//     console.error("Focus failed: Cannot find native input element in instance.", componentInstance);
-// }
-
-async function focusUnitInput() {
-  await nextTick()
-
-  const el = unitInputRef.value?.$el?.querySelector('input')
-
-  if (!el) {
-    console.warn('Không tìm thấy input DOM')
-    return
+async function focus(id) {
+ await nextTick()
+  const el = document.getElementById(id);
+  if (el) {
+    el.focus();
   }
-
-  el.focus()
 }
 
 async function onScanUnit() {
@@ -284,6 +256,10 @@ async function handleAssignScan() {
   form.part_code = row.part.part_no
   form.qty = Math.floor(row.qty)
 
+  if (row.slot) {
+    getSlotDetail(row.slot)
+  }
+
   // highlight row
   selectedRowId.value = row.id
 
@@ -297,18 +273,21 @@ async function handleAssignScan() {
 
 async function handleScanMode() {
   try {
-    await getAll({
-      search: form.unit_code,
-      status: 'allocated'
+    const unit = await scanPutAway({
+        unit_code: form.unit_code,
+        location_qr: form.location_qr
     })
-
-    toast.success('QR hợp lệ, quét vị trí')
+    console.log(unit);
+    
+    if (unit.length != 0) {
+      toast.success('QR hợp lệ, quét vị trí')
+    }
 
     await nextTick()
     // focusInput(locationQrRef)
 
-  } catch (e) {
-    toast.error('QR không hợp lệ hoặc chưa gán vị trí')
+  } catch (error) {
+    toast.error(error.response.data.message)
     resetUnitInput()
   }
 }
@@ -317,16 +296,6 @@ function resetUnitInput() {
   form.unit_code = ''
   nextTick(() => unitInputRef.value?.focus())
 }
-
-watch(mode, async (val) => {
-  clearForm()
-  selectedRowId.value = null
-
-  if (val === 'assign') {
-    await nextTick()
-    focusUnitInput()
-  }
-})
 
 
 
@@ -337,10 +306,10 @@ watch(mode, async (val) => {
   <CCard class="mb-3" ref="formRef">
     <CCardHeader>
       <CButtonGroup>
-        <CButton :color="mode === 'assign' ? 'primary' : 'secondary'" @click="mode = 'assign'; clearForm()">
+        <CButton :color="mode === 'assign' ? 'primary' : 'secondary'" @click="mode = 'assign'; clearForm(); focus('qr-part-id')">
           Nhập vị trí
         </CButton>
-        <CButton :color="mode === 'scan' ? 'primary' : 'secondary'" @click="mode = 'scan'; clearForm()">
+        <CButton :color="mode === 'scan' ? 'primary' : 'secondary'" @click="mode = 'scan'; clearForm(); focus('qr-part-id')">
           Nhập kho
         </CButton>
       </CButtonGroup>
@@ -348,14 +317,15 @@ watch(mode, async (val) => {
 
     <CCardBody>
       <!-- MODE 1: ASSIGN LOCATION -->
-      <div v-if="mode === 'assign'">
+      <div v-if ="mode === 'assign'">
         <CRow>
           <CCol md="3">
             <CFormInput
+              id="qr-part-id" 
               v-model="form.unit_code"
               label="QR parts"
-              ref="unitInputRef"
               @keydown.enter.prevent="onScanUnit"
+              autofocus
             />
           </CCol>
           <CCol md="3">
@@ -405,18 +375,19 @@ watch(mode, async (val) => {
 
       </div>
       <!-- MODE 2: SCAN -->
-      <CRow v-else>
+      <CRow v-else ="mode === 'scan'">
         <CCol md="3">
           <CFormInput
               v-model="form.unit_code"
               label="QR parts"
-              ref="unitInputRef"
-              @keydown.enter.prevent="onScanUnit"
+              id="qr-part-id" 
+              @keydown.enter.prevent= "focus('qr-loc-id')"
           />
         </CCol>
         <CCol md="3">
           <CFormInput
             v-if="mode === 'scan'"
+            id="qr-loc-id" 
             :select-ref="el => warehouseSelectRef = el"
             v-model="form.location_qr"
             label="QR vị trí"
